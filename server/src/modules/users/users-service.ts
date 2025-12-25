@@ -10,16 +10,32 @@ export class UserService {
       });
 
       if (!user) {
-        user = await prisma.user.create({
-          data: {
-            clerkId,
-            email,
-            profile: {
-              create: {},
-            },
-          },
+        // Check if a user with this email already exists
+        const existingUserByEmail = await prisma.user.findUnique({
+          where: { email },
           include: { profile: true },
         });
+
+        if (existingUserByEmail) {
+          // Update the existing user with the new clerkId
+          user = await prisma.user.update({
+            where: { email },
+            data: { clerkId },
+            include: { profile: true },
+          });
+        } else {
+          // Create a new user
+          user = await prisma.user.create({
+            data: {
+              clerkId,
+              email,
+              profile: {
+                create: {},
+              },
+            },
+            include: { profile: true },
+          });
+        }
       }
 
       return user as UserResponse;

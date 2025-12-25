@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { useAuth } from '@clerk/clerk-react';
+import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function CTASection() {
+  const { isSignedIn } = useAuth();
+
   return (
     <section className="relative py-20 md:py-32">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11,19 +14,23 @@ export default function CTASection() {
           </div>
 
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-balance mb-4">
-            Ready to Make a Difference?
+            {isSignedIn
+              ? 'Continue Your Journey'
+              : 'Ready to Make a Difference?'}
           </h2>
 
           <p className="text-lg text-primary-foreground/90 max-w-2xl mx-auto mb-8">
-            Join thousands of households and communities already reducing waste and eating healthier. Start your free account today, no credit card required.
+            {isSignedIn
+              ? 'Access your personalized dashboard and continue making a positive impact on food sustainability.'
+              : 'Join thousands of households and communities already reducing waste and eating healthier. Start your free account today, no credit card required.'}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              to="/sign-in"
+              to={isSignedIn ? '/dashboard' : '/sign-in'}
               className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-primary-foreground text-primary rounded-lg hover:bg-opacity-90 transition-smooth font-semibold"
             >
-              Get Started Free
+              {isSignedIn ? 'Go to Dashboard' : 'Get Started Free'}
               <ArrowRight className="w-4 h-4" />
             </Link>
             <a
@@ -36,5 +43,5 @@ export default function CTASection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom'
-import { ArrowRight, Leaf } from 'lucide-react'
+import { useAuth } from '@clerk/clerk-react';
+import { ArrowRight, Leaf } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function HeroSection() {
+  const { isSignedIn } = useAuth();
+
   return (
     <section className="relative w-full pt-32 pb-16 md:pt-48 md:pb-24 overflow-hidden">
       <div className="absolute inset-0 -z-10">
@@ -14,23 +17,28 @@ export default function HeroSection() {
           <div className="flex flex-col gap-6">
             <div className="inline-flex items-center gap-2 w-fit px-4 py-2 bg-primary/10 rounded-full">
               <Leaf className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Join the Food Revolution</span>
+              <span className="text-sm font-medium text-primary">
+                Join the Food Revolution
+              </span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-balance">
-              Smart Food Management for a <span className="text-primary">Healthier Future</span>
+              Smart Food Management for a{' '}
+              <span className="text-primary">Healthier Future</span>
             </h1>
 
             <p className="text-lg text-foreground/70 leading-relaxed text-pretty max-w-lg">
-              Track your food consumption, reduce waste, and build sustainable habits. Empower your household or community to make mindful choices about nutrition and responsible consumption.
+              Track your food consumption, reduce waste, and build sustainable
+              habits. Empower your household or community to make mindful
+              choices about nutrition and responsible consumption.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                to="/sign-in"
+                to={isSignedIn ? '/dashboard' : '/sign-in'}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth font-medium text-base"
               >
-                Start Free Today
+                {isSignedIn ? 'Go to Dashboard' : 'Start Free Today'}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
@@ -46,30 +54,32 @@ export default function HeroSection() {
                 <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
                   <span className="text-sm font-bold text-accent">✓</span>
                 </div>
-                <span className="text-sm text-foreground/80">Zero waste tracking</span>
+                <span className="text-sm text-foreground/80">
+                  Zero waste tracking
+                </span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
                   <span className="text-sm font-bold text-accent">✓</span>
                 </div>
-                <span className="text-sm text-foreground/80">Family & community</span>
+                <span className="text-sm text-foreground/80">
+                  Family & community
+                </span>
               </div>
             </div>
           </div>
 
           <div className="relative w-full h-96 md:h-full min-h-96 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl overflow-hidden flex items-center justify-center border border-border">
-            <div className="absolute inset-0">
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <Leaf className="w-24 h-24 text-primary/30 mx-auto mb-4" />
-                  <p className="text-foreground/40 font-medium">3D Spline Scene Ready</p>
-                  <p className="text-foreground/30 text-sm">Add your Spline component here</p>
-                </div>
-              </div>
-            </div>
+            <img
+              src="/sustainability-hero.jpg"
+              alt="Sustainable food management with recycling symbols and eco-friendly home"
+              className="w-full h-full object-cover object-center"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

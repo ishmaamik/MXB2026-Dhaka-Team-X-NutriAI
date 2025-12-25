@@ -21,7 +21,15 @@ model User {
   inventoryItemsAdded InventoryItem[]   @relation("AddedInventoryItems")
   addedMembers        InventoryMember[] @relation("AddedInventoryMembers")
   inventoryMembers    InventoryMember[] @relation("UserInventoryMembers")
+  foodListings        FoodListing[]     @relation("UserListings")
+  sharingLogs         SharingLog[]      @relation("UserSharingLogs")
   profile             UserProfile?
+  sdgAchievements     SdgAchievement[]
+  sdgScores           SdgScore[]
+  chatSessions        ChatSession[]
+  mealPlans           MealPlan[]
+  aiInsights          AiInsight[]
+  consumptionPatterns ConsumptionPattern[]
 }
 
 model UserProfile {
@@ -107,9 +115,11 @@ model InventoryItem {
   deletedAt       DateTime?
   consumptionLogs ConsumptionLog[] @relation("InventoryItemConsumptions")
   files           File[]           @relation("InventoryItemFiles")
+  foodListing     FoodListing?     @relation("FoodListings")
   addedBy         User?            @relation("AddedInventoryItems", fields: [addedById], references: [id])
   foodItem        FoodItem?        @relation(fields: [foodItemId], references: [id])
   inventory       Inventory        @relation("InventoryItems", fields: [inventoryId], references: [id])
+  expirationRisk  ExpirationRisk?
 }
 
 model ConsumptionLog {
@@ -185,4 +195,140 @@ model File {
   inventory       Inventory?     @relation("InventoryFiles", fields: [inventoryId], references: [id])
   inventoryItem   InventoryItem? @relation("InventoryItemFiles", fields: [inventoryItemId], references: [id])
   user            User?          @relation("UserFiles", fields: [userId], references: [id])
+}
+
+model ConsumptionPattern {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  weekStartDate   DateTime
+  category        String
+  avgQuantity     Float
+  trendDirection  String   // "up", "down", "stable"
+  patternType     String?  // e.g. "weekend_spike", "weekday_heavy"
+  createdAt       DateTime @default(now())
+}
+
+model AiInsight {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  insightType  String   // "pattern", "waste", "nutrition", "risk"
+  data         Json
+  generatedAt  DateTime @default(now())
+  expiresAt    DateTime
+}
+
+model ExpirationRisk {
+  id                String        @id @default(cuid())
+  inventoryItemId   String        @unique
+  inventoryItem     InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  riskScore         Int           // 0 - 100
+  riskFactors       Json
+  predictedWasteDate DateTime?
+  alertSent         Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+}
+
+model MealPlan {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  weekStartDate   DateTime
+  budget          Float
+  meals           Json     // array of meal objects
+  shoppingList    Json
+  totalCost       Float
+  nutritionSummary Json?
+  status          String   @default("active") // "active", "completed", "cancelled"
+  createdAt       DateTime @default(now())
+}
+
+model ChatSession {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  startedAt    DateTime      @default(now())
+  lastActivity DateTime      @default(now())
+  messages     ChatMessage[]
+}
+
+model ChatMessage {
+  id          String      @id @default(cuid())
+  sessionId   String
+  session     ChatSession @relation(fields: [sessionId], references: [id])
+  role        String      // "user" | "assistant"
+  content     String      @db.Text
+  contextData Json?
+  createdAt   DateTime    @default(now())
+}
+
+model SdgScore {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id])
+  weekStartDate       DateTime
+  wasteReductionScore Int
+  nutritionScore      Int
+  budgetScore         Int
+  sustainabilityScore Int
+  totalScore          Int
+  insights            Json
+  recommendations     Json
+  createdAt           DateTime @default(now())
+  @@unique([userId, weekStartDate])
+}
+
+model SdgAchievement {
+  id             String  @id @default(cuid())
+  userId         String
+  user           User    @relation(fields: [userId], references: [id])
+  achievementType String
+  title          String
+  description    String
+  unlockedAt     DateTime @default(now())
+}
+
+enum ListingStatus {
+  AVAILABLE
+  CLAIMED
+  COMPLETED
+  CANCELLED
+}
+
+model FoodListing {
+  id              String         @id @default(uuid())
+  inventoryItemId String         @unique
+  listerId        String
+  title           String
+  description     String?
+  quantity        Float
+  unit            String?
+  pickupLocation  String?
+  availableUntil  DateTime?
+  status          ListingStatus  @default(AVAILABLE)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  isDeleted       Boolean        @default(false)
+  deletedAt       DateTime?
+  inventoryItem   InventoryItem  @relation("FoodListings", fields: [inventoryItemId], references: [id])
+  lister          User           @relation("UserListings", fields: [listerId], references: [id])
+  sharingLogs     SharingLog[]   @relation("ListingSharingLogs")
+}
+
+model SharingLog {
+  id            String      @id @default(uuid())
+  listingId     String
+  claimerId     String?
+  claimerName   String?
+  claimedAt     DateTime?
+  completedAt   DateTime?
+  notes         String?
+  quantityClaimed Float?
+  status        String      @default("CLAIMED") // CLAIMED, COMPLETED, CANCELLED
+  createdAt     DateTime    @default(now())
+  isDeleted     Boolean     @default(false)
+  deletedAt     DateTime?
+  listing       FoodListing @relation("ListingSharingLogs", fields: [listingId], references: [id])
+  claimer       User?       @relation("UserSharingLogs", fields: [claimerId], references: [id])
 }

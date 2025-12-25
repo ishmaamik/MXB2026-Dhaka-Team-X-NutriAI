@@ -1,6 +1,5 @@
 import prisma from '../../config/database';
 import {
-  ConsumptionLogFilters,
   ConsumptionLogRequest,
   InventoryItemFilters,
   InventoryItemRequest,
@@ -434,7 +433,7 @@ export class InventoryService {
 
     // If an inventoryItemId is provided, verify it exists and belongs to the inventory
     let inventoryItem: any = null;
-    if (data.inventoryItemId) {
+    if (data.inventoryItemId && !data.inventoryItemId.startsWith('temp-')) {
       inventoryItem = await prisma.inventoryItem.findFirst({
         where: {
           id: data.inventoryItemId,
@@ -465,17 +464,21 @@ export class InventoryService {
     }
 
     // Create the consumption log
+    const consumptionLogData = {
+      inventoryId: data.inventoryId,
+      inventoryItemId: data.inventoryItemId?.startsWith('temp-')
+        ? null
+        : data.inventoryItemId,
+      foodItemId: data.foodItemId,
+      itemName: data.itemName,
+      quantity: data.quantity,
+      unit: data.unit,
+      consumedAt: data.consumedAt || new Date(),
+      notes: data.notes,
+    };
+
     const consumptionLog = await prisma.consumptionLog.create({
-      data: {
-        inventoryId: data.inventoryId,
-        inventoryItemId: data.inventoryItemId,
-        foodItemId: data.foodItemId,
-        itemName: data.itemName,
-        quantity: data.quantity,
-        unit: data.unit,
-        consumedAt: data.consumedAt || new Date(),
-        notes: data.notes,
-      },
+      data: consumptionLogData,
     });
 
     // Update inventory quantity if an inventory item was consumed
@@ -516,67 +519,173 @@ export class InventoryService {
   /**
    * Get consumption logs with optional filtering
    */
-  async getConsumptionLogs(filters: ConsumptionLogFilters, userId: string) {
-    // First, find the application user by their Clerk ID
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
+  async getConsumptionLogs(
+    userId: string,
+    filters: {
+      startDate?: Date;
+      endDate?: Date;
+      inventoryId?: string;
+    } = {},
+  ) {
+    console.log(
+      '🔍 [getConsumptionLogs] === STARTING CONSUMPTION LOGS FETCH ===',
+    );
+    console.log('🔍 [getConsumptionLogs] User Clerk ID:', userId);
+    console.log('🔍 [getConsumptionLogs] Filters received:', {
+      startDate: filters?.startDate?.toISOString?.() || filters?.startDate,
+      endDate: filters?.endDate?.toISOString?.() || filters?.endDate,
+      inventoryId: filters?.inventoryId,
     });
 
-    if (!user) {
-      throw new Error('User not found in database');
-    }
+    try {
+      // First, find the application user by their Clerk ID
+      console.log('🔍 [getConsumptionLogs] Looking up user by Clerk ID...');
+      const user = await prisma.user.findUnique({
+        where: { clerkId: userId },
+      });
 
-    const whereClause: any = {
-      inventory: {
-        createdById: user.id,
-      },
-      isDeleted: false,
-    };
+      console.log(
+        '🔍 [getConsumptionLogs] Database user found:',
+        user ? { id: user.id, clerkId: user.clerkId } : 'NULL',
+      );
 
-    // Add date range filters if specified
-    if (filters.startDate) {
-      whereClause.consumedAt = {
-        ...whereClause.consumedAt,
-        gte: filters.startDate,
-      };
-    }
+      if (!user) {
+        console.error(
+          '❌ [getConsumptionLogs] User not found in database for Clerk ID:',
+          userId,
+        );
+        throw new Error('User not found in database');
+      }
 
-    if (filters.endDate) {
-      whereClause.consumedAt = {
-        ...whereClause.consumedAt,
-        lte: filters.endDate,
-      };
-    }
-
-    // Add inventory filter if specified
-    if (filters.inventoryId) {
-      whereClause.inventoryId = filters.inventoryId;
-    }
-
-    return await prisma.consumptionLog.findMany({
-      where: whereClause,
-      include: {
-        foodItem: {
-          select: {
-            name: true,
-            category: true,
-          },
+      // Check user's inventories
+      console.log('🔍 [getConsumptionLogs] Fetching user inventories...');
+      const userInventories = await prisma.inventory.findMany({
+        where: {
+          createdById: user.id,
+          isDeleted: false,
         },
-        inventoryItem: {
-          select: {
-            customName: true,
-          },
-        },
+        select: { id: true, name: true },
+      });
+
+      console.log(
+        '🔍 [getConsumptionLogs] User inventories found:',
+        userInventories.length,
+      );
+      console.log('🔍 [getConsumptionLogs] User inventories:', userInventories);
+
+      // Initialize whereClause first
+      const whereClause: any = {
         inventory: {
-          select: {
-            name: true,
+          createdById: user.id,
+          isDeleted: false,
+        },
+        isDeleted: false,
+      };
+
+      console.log('🔍 [getConsumptionLogs] Building where clause...');
+
+      // Add inventory filter if specified
+      if (filters.inventoryId) {
+        console.log(
+          '🔍 [getConsumptionLogs] Filtering by specific inventory ID:',
+          filters.inventoryId,
+        );
+        const hasAccess = userInventories.some(
+          inv => inv.id === filters.inventoryId,
+        );
+        console.log(
+          '🔍 [getConsumptionLogs] User has access to this inventory:',
+          hasAccess,
+        );
+        if (!hasAccess) {
+          console.log(
+            '⚠️ [getConsumptionLogs] User does not have access to inventory:',
+            filters.inventoryId,
+          );
+          console.log(
+            '⚠️ [getConsumptionLogs] Returning empty array instead of error',
+          );
+          return []; // Return empty array instead of throwing error
+        }
+        whereClause.inventoryId = filters.inventoryId;
+      } else {
+        console.log(
+          '🔍 [getConsumptionLogs] No specific inventory filter - will fetch from all user inventories',
+        );
+      }
+
+      // Add date range filters if specified
+      if (filters.startDate) {
+        console.log(
+          '🔍 [getConsumptionLogs] Adding startDate filter:',
+          filters.startDate,
+        );
+        whereClause.consumedAt = {
+          ...whereClause.consumedAt,
+          gte: filters.startDate,
+        };
+      }
+
+      if (filters.endDate) {
+        console.log(
+          '🔍 [getConsumptionLogs] Adding endDate filter:',
+          filters.endDate,
+        );
+        whereClause.consumedAt = {
+          ...whereClause.consumedAt,
+          lte: filters.endDate,
+        };
+      }
+
+      console.log(
+        '🔍 [getConsumptionLogs] Final where clause:',
+        JSON.stringify(whereClause, null, 2),
+      );
+
+      console.log('🔍 [getConsumptionLogs] Executing database query...');
+      const consumptionLogs = await prisma.consumptionLog.findMany({
+        where: whereClause,
+        include: {
+          foodItem: {
+            select: {
+              name: true,
+              category: true,
+            },
+          },
+          inventoryItem: {
+            select: {
+              customName: true,
+            },
+          },
+          inventory: {
+            select: {
+              name: true,
+            },
           },
         },
-      },
-      orderBy: {
-        consumedAt: 'desc',
-      },
-    });
+        orderBy: {
+          consumedAt: 'desc',
+        },
+      });
+
+      console.log(
+        '🔍 [getConsumptionLogs] Found consumption logs count:',
+        consumptionLogs.length,
+      );
+      console.log('🔍 [getConsumptionLogs] === END CONSUMPTION LOGS DEBUG ===');
+
+      return consumptionLogs;
+    } catch (error) {
+      console.error(
+        '❌ [getConsumptionLogs] Error in getConsumptionLogs:',
+        error,
+      );
+      if (error instanceof Error) {
+        console.error('❌ [getConsumptionLogs] Error stack:', error.stack);
+        console.error('❌ [getConsumptionLogs] Error message:', error.message);
+      }
+      throw error;
+    }
   }
 
   /**

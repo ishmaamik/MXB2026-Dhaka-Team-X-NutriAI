@@ -26,6 +26,28 @@ export interface InventoryItem {
   };
 }
 
+export interface ConsumptionLog {
+  id: string;
+  inventoryId: string;
+  inventoryItemId?: string;
+  foodItemId?: string;
+  itemName: string;
+  quantity: number;
+  unit?: string;
+  consumedAt: string;
+  notes?: string;
+  foodItem?: {
+    name: string;
+    category: string;
+  };
+  inventoryItem?: {
+    customName?: string;
+  };
+  inventory: {
+    name: string;
+  };
+}
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -341,6 +363,72 @@ export function useInventory() {
     });
   };
 
+  // Get consumption logs
+  const useGetConsumptionLogs = (filters?: {
+    startDate?: Date;
+    endDate?: Date;
+    inventoryId?: string;
+  }) => {
+    // Create stable query key by serializing dates to ISO strings
+    const queryKey = [
+      'consumption-logs',
+      {
+        startDate: filters?.startDate?.toISOString() || null,
+        endDate: filters?.endDate?.toISOString() || null,
+        inventoryId: filters?.inventoryId || null,
+      }
+    ];
+    
+    return useQuery<ConsumptionLog[]>({
+      queryKey,
+      queryFn: async () => {
+        try {
+          console.log('=== FRONTEND CONSUMPTION LOGS REQUEST ===');
+          const params = new URLSearchParams();
+          if (filters?.startDate) {
+            params.append('startDate', filters.startDate.toISOString());
+            console.log('Adding startDate:', filters.startDate.toISOString());
+          }
+          if (filters?.endDate) {
+            params.append('endDate', filters.endDate.toISOString());
+            console.log('Adding endDate:', filters.endDate.toISOString());
+          }
+          if (filters?.inventoryId) {
+            params.append('inventoryId', filters.inventoryId);
+            console.log('Adding inventoryId:', filters.inventoryId);
+          }
+
+          const url = `/inventories/consumption?${params.toString()}`;
+          console.log('Making request to:', url);
+          console.log(
+            'Full URL with base:',
+            `${
+              import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+            }${url}`,
+          );
+
+          const response = await fetchWithAuth(url);
+          console.log('Response received:', response);
+          console.log('=== END FRONTEND REQUEST ===');
+
+          return response.consumptionLogs || [];
+        } catch (error) {
+          console.error('Error fetching consumption logs:', error);
+          if (error instanceof Error) {
+            console.error('Error details:', {
+              message: error.message,
+              stack: error.stack,
+            });
+          }
+          // Return empty array on error to prevent UI crashes
+          return [];
+        }
+      },
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
+
   return {
     useGetInventories,
     useGetInventoryItems,
@@ -351,5 +439,6 @@ export function useInventory() {
     useDeleteInventory,
     useRemoveItemFromInventory,
     useLogConsumption,
+    useGetConsumptionLogs,
   };
 }

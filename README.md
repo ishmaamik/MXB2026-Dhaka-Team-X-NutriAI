@@ -54,6 +54,73 @@ A recipe suggestion engine specifically designed to transform cooked leftovers i
 - **Safe Re-use:** Suggests recipes for leftovers (e.g., turning leftover rice into Fried Rice with veggies) but only if the food is deemed safe based on storage time and weather.
 - **Safety Prompts:** "You are using 12-hour old rice. Please ensure it was refrigerated, otherwise, discard to avoid food poisoning."
 
+### 🤖 Feature 6: AI-Powered Intelligent Dashboard
+An intelligent analytics system that provides personalized insights, consumption patterns, and AI-driven recommendations.
+
+**Key Capabilities:**
+- **Smart Analytics:** AI-generated insights on consumption patterns, waste reduction, and nutritional habits
+- **Chat Interface:** Interactive AI assistant for personalized food and nutrition advice
+- **SDG Scoring:** Sustainability tracking with scores for waste reduction, nutrition, and budget management
+- **Predictive Analytics:** Expiration risk assessment and waste prevention alerts
+
+### 🏘️ Feature 7: Neighbourhood Food Sharing
+A community platform for sharing surplus food with neighbors to reduce waste and build connections.
+
+**Key Capabilities:**
+- **Food Listings:** Share excess inventory items with pickup locations and availability times
+- **Community Browse:** Discover and claim food shared by neighbors
+- **Sharing Logs:** Track sharing activities and completed exchanges
+- **Safety Verification:** Built-in safety checks for shared food items
+
+### 📷 Feature 8: Smart Image Processing & OCR
+Advanced image recognition and OCR technology for effortless food inventory management.
+
+**Key Capabilities:**
+- **Receipt Scanning:** Extract food items from grocery receipts using AI-powered OCR
+- **Image Upload:** Upload and store food photos for inventory tracking
+- **Auto-Extraction:** Automatically identify and categorize food items from images
+- **Cloud Storage:** Secure image storage with Cloudinary integration
+
+### 👨‍💼 Feature 9: Admin Management System
+Administrative tools for managing the food catalog and educational resources.
+
+**Key Capabilities:**
+- **Food Catalog Management:** Add and manage food items with nutritional information
+- **Resource Management:** Create and organize educational content
+- **System Oversight:** Administrative dashboard for platform management
+
+## Current Implementation Status
+
+The application is currently in development with the following features implemented:
+
+### ✅ Completed Features
+- **Core Authentication:** User registration, login, and profile management with Clerk
+- **Smart Pantry Engine:** Complete inventory management with food items, quantities, and expiration tracking
+- **AI-Powered Dashboard:** Intelligent analytics with consumption patterns, SDG scoring, and AI chat interface
+- **Neighbourhood Sharing:** Full food sharing system with listings, claims, and community features
+- **OCR & Image Processing:** Receipt scanning, image upload, and AI-powered food extraction
+- **Admin Panel:** Administrative tools for food catalog and resource management
+- **Advanced Analytics:** Consumption patterns, expiration risk assessment, meal planning
+- **Educational Resources:** Article and video content with tagging system
+- **Daily Logging:** Consumption tracking and waste reduction monitoring
+- **Responsive UI:** Modern, mobile-friendly interface with Tailwind CSS
+
+### 🚧 In Development / Planned Features
+- **Hyper-Local Price Optimization:** Real-time market price integration and budget optimization
+- **Weather-Adaptive Freshness Guard:** Live weather API integration for expiration adjustments
+- **Clinical & Allergen Safety Shield:** Health condition-based recipe filtering and allergen detection
+- **Barcode Scanning:** Product barcode recognition for instant inventory addition
+- **Advanced AI Features:** Enhanced meal recommendations and nutritional planning
+- **Mobile App:** Native mobile applications for iOS and Android
+- **Multi-language Support:** Localization for Bangladeshi regional languages
+- **Offline Mode:** Limited functionality without internet connection
+
+### 🧪 Testing & Quality Assurance
+- **Backend Testing:** Jest framework with API endpoint testing
+- **Database Testing:** Connection validation and migration testing
+- **OCR Accuracy:** Image processing validation with Groq AI
+- **UI Testing:** Component testing and user experience validation
+
 ## User Stories & Case Studies
 
 ### Case Study A: The Cost-Conscious Rickshaw Puller
@@ -96,13 +163,18 @@ A recipe suggestion engine specifically designed to transform cooked leftovers i
 - **Icons:** Lucide React
 - **Date Handling:** date-fns + React Datepicker
 - **HTTP Client:** Fetch API with custom authentication wrapper
+- **UI Components:** Custom components with accessibility support
 
 ### Backend (Server)
 - **Runtime:** Node.js
 - **Framework:** Express.js 5
 - **Database:** PostgreSQL with Prisma ORM 6
 - **Authentication:** Clerk SDK for Node.js
+- **AI Integration:** Groq AI for OCR and intelligent insights
+- **File Storage:** Cloudinary for image uploads
 - **Security:** Helmet, CORS, Compression
+- **File Upload:** express-fileupload middleware
+- **OCR Processing:** Tesseract.js with trained data
 - **Testing:** Jest with Supertest
 - **Development:** Nodemon, ts-node
 
@@ -115,6 +187,14 @@ The application uses PostgreSQL with the following main entities:
 - **Consumption Logs:** Tracking of food consumption for waste reduction
 - **Resources:** Educational content (articles/videos) with tagging system
 - **Files:** File upload support for food photos and receipts
+- **Food Listings:** Neighbourhood food sharing listings
+- **Sharing Logs:** Tracking of food sharing transactions
+- **AI Insights:** Stored AI-generated analytics and recommendations
+- **Consumption Patterns:** Historical consumption pattern analysis
+- **Expiration Risk:** Predictive expiration risk assessments
+- **Meal Plans:** Generated meal planning data
+- **Chat Sessions:** AI chat conversation history
+- **SDG Scores:** Sustainability scoring and achievements
 
 ### Architecture
 - **Full-Stack:** Separate client and server directories
@@ -130,83 +210,130 @@ LocaNutri-Smart/
 ├── client/                          # React frontend application
 │   ├── src/
 │   │   ├── components/              # Reusable UI components
-│   │   │   ├── Layout.tsx           # Main app layout with sidebar
-│   │   │   ├── Sidebar.tsx          # Navigation sidebar
-│   │   │   ├── food/                # Food-related components
-│   │   │   │   ├── AddFoodModal.tsx # Modal for adding food items
-│   │   │   │   ├── FoodFilter.tsx   # Food filtering component
-│   │   │   │   └── FoodList.tsx     # Food items list display
-│   │   │   ├── home/                # Landing page components
+│   │   │   ├── AdminProtectedRoute.tsx    # Admin route protection
+│   │   │   ├── AIResponseDisplay.tsx      # AI response rendering
+│   │   │   ├── Layout.tsx                 # Main app layout with sidebar
+│   │   │   ├── MarkdownRenderer.tsx       # Markdown content renderer
+│   │   │   ├── Sidebar.tsx                # Navigation sidebar
+│   │   │   ├── food/                      # Food-related components
+│   │   │   │   ├── AddFoodModal.tsx       # Modal for adding food items
+│   │   │   │   ├── FoodFilter.tsx         # Food filtering component
+│   │   │   │   ├── FoodList.tsx           # Food items list display
+│   │   │   │   └── OCRUpload.tsx          # OCR image upload component
+│   │   │   ├── home/                      # Landing page components
 │   │   │   │   ├── HeroSection.tsx
 │   │   │   │   ├── FeaturesSection.tsx
 │   │   │   │   ├── CTASection.tsx
 │   │   │   │   ├── HowItWorksSection.tsx
-│   │   │   ├── resources/           # Resource display components
-│   │   │   │   └── ResourceCard.tsx
-│   │   │   └── ... (Footer, Navbar, ImpactSection)
-│   │   ├── pages/                   # Page components
-│   │   │   ├── Home.tsx             # Landing page
-│   │   │   ├── Dashboard.tsx        # User dashboard
-│   │   │   ├── InventoryPage.tsx    # Inventory management
-│   │   │   ├── InventoryDetailPage.tsx # Individual inventory details
-│   │   │   ├── DailyLogPage.tsx     # Daily consumption logging
-│   │   │   ├── ProfilePage.tsx      # User profile
-│   │   │   ├── EditProfilePage.tsx  # Profile editing
-│   │   │   ├── ResourcesPage.tsx    # Educational resources
-│   │   │   ├── NeighbourhoodPage.tsx # Community features
-│   │   │   ├── SignInPage.tsx       # Authentication
+│   │   │   │   ├── ImpactSection.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── Navbar.tsx
+│   │   │   ├── inventory/                 # Inventory components
+│   │   │   │   └── ImageUploadModal.tsx   # Image upload modal
+│   │   │   ├── neighbourhood/             # Community sharing components
+│   │   │   │   ├── AvailableListings.tsx  # Browse available food
+│   │   │   │   ├── CreateListing.tsx      # Create food listing
+│   │   │   │   ├── ListingCard.tsx        # Food listing card
+│   │   │   │   ├── MyListings.tsx         # User's listings
+│   │   │   │   ├── sharing-service.ts     # Sharing API service
+│   │   │   │   └── types.ts               # Sharing type definitions
+│   │   │   ├── admin/                     # Admin components
+│   │   │   │   ├── AddFoodModal.tsx       # Admin food addition
+│   │   │   │   └── AddResourceModal.tsx   # Admin resource addition
+│   │   │   └── resources/                 # Resource display components
+│   │   │       └── ResourceCard.tsx
+│   │   ├── pages/                         # Page components
+│   │   │   ├── Home.tsx                   # Landing page
+│   │   │   ├── Dashboard.tsx              # User dashboard
+│   │   │   ├── IntelligentDashboard.tsx   # AI-powered dashboard
+│   │   │   ├── AdminDashboard.tsx         # Admin dashboard
+│   │   │   ├── InventoryPage.tsx          # Inventory management
+│   │   │   ├── InventoryDetailPage.tsx    # Individual inventory details
+│   │   │   ├── DailyLogPage.tsx           # Daily consumption logging
+│   │   │   ├── ProfilePage.tsx            # User profile
+│   │   │   ├── EditProfilePage.tsx        # Profile editing
+│   │   │   ├── ResourcesPage.tsx          # Educational resources
+│   │   │   ├── NeighbourhoodPage.tsx      # Community sharing
+│   │   │   ├── SignInPage.tsx             # Authentication
 │   │   │   ├── SignUpPage.tsx
-│   │   │   └── OnboardingPage.tsx   # User onboarding
-│   │   ├── services/                # API service functions
-│   │   │   ├── authService.ts       # Authentication helpers
-│   │   │   ├── inventoryService.ts  # Inventory API calls
-│   │   │   ├── resources-service.ts # Resources API calls
-│   │   │   └── utils.ts             # Utility functions
-│   │   ├── hooks/                   # Custom React hooks
-│   │   │   ├── useApi.ts            # API call hooks
-│   │   │   └── useInventory.ts      # Inventory-specific hooks
-│   │   ├── context/                 # React context providers
-│   │   │   └── ProfileContext.tsx   # User profile context
-│   │   ├── types/                   # TypeScript type definitions
-│   │   │   └── inventory.ts         # Inventory-related types
-│   │   └── assets/                  # Static assets
-│   ├── public/                      # Public static files
-│   └── package.json                 # Frontend dependencies
-├── server/                          # Node.js backend application
+│   │   │   └── OnboardingPage.tsx         # User onboarding
+│   │   ├── services/                      # API service functions
+│   │   │   ├── authService.ts             # Authentication helpers
+│   │   │   ├── inventoryService.ts        # Inventory API calls
+│   │   │   ├── resources-service.ts       # Resources API calls
+│   │   │   └── utils.ts                   # Utility functions
+│   │   ├── hooks/                         # Custom React hooks
+│   │   │   ├── useApi.ts                  # API call hooks
+│   │   │   └── useInventory.ts            # Inventory-specific hooks
+│   │   ├── context/                       # React context providers
+│   │   │   └── ProfileContext.tsx         # User profile context
+│   │   │   ├── types/                     # TypeScript type definitions
+│   │   │   │   └── inventory.ts           # Inventory-related types
+│   │   │   └── utils/                     # Utility functions
+│   │   │       └── textUtils.ts           # Text processing utilities
+│   │   └── assets/                        # Static assets
+│   ├── public/                            # Public static files
+│   └── package.json                       # Frontend dependencies
+├── server/                                # Node.js backend application
 │   ├── src/
-│   │   ├── modules/                 # Feature modules
-│   │   │   ├── foods/               # Food items management
+│   │   ├── modules/                       # Feature modules
+│   │   │   ├── foods/                     # Food items management
 │   │   │   │   ├── food-controller.ts
 │   │   │   │   └── food-router.ts
-│   │   │   ├── inventories/         # Inventory system
+│   │   │   ├── inventories/               # Inventory system
 │   │   │   │   ├── inventory-controller.ts
 │   │   │   │   ├── inventory-router.ts
 │   │   │   │   ├── inventory-service.ts
 │   │   │   │   └── inventory-types.ts
-│   │   │   ├── resources/           # Educational resources
+│   │   │   ├── resources/                 # Educational resources
 │   │   │   │   ├── resources-controller.ts
 │   │   │   │   ├── resources-repository.ts
 │   │   │   │   └── resources-router.ts
-│   │   │   └── users/               # User management
-│   │   │       ├── users-controller.ts
-│   │   │       ├── users-router.ts
-│   │   │       ├── users-service.ts
-│   │   │       └── users-types.ts
-│   │   ├── config/                  # Configuration files
-│   │   │   ├── app.ts               # App configuration
-│   │   │   ├── clerk.ts             # Clerk auth config
-│   │   │   └── database.ts          # Database connection
-│   │   ├── middleware/              # Express middleware
-│   │   │   ├── auth.ts              # Authentication middleware
-│   │   │   └── index.ts             # Middleware setup
-│   │   └── *.ts                     # Main app files (index, server, router)
-│   ├── prisma/                      # Database schema and migrations
-│   │   ├── schema.prisma            # Database schema
-│   │   ├── seed.ts                  # Database seeding
-│   │   └── migrations/              # Prisma migrations
-│   ├── docs/                        # API documentation
-│   │   └── api-docs.md              # API reference
-│   └── package.json                 # Backend dependencies
+│   │   │   ├── users/                     # User management
+│   │   │   │   ├── users-controller.ts
+│   │   │   │   ├── users-router.ts
+│   │   │   │   ├── users-service.ts
+│   │   │   │   └── users-types.ts
+│   │   │   ├── admin/                     # Admin functionality
+│   │   │   │   ├── admin-controller.ts
+│   │   │   │   ├── admin-router.ts
+│   │   │   │   └── admin-service.ts
+│   │   │   ├── images/                    # Image upload system
+│   │   │   │   ├── image-controller.ts
+│   │   │   │   ├── image-router.ts
+│   │   │   │   ├── image-service.ts
+│   │   │   │   └── image-types.ts
+│   │   │   ├── intelligence/              # AI analytics
+│   │   │   │   └── intelligence-controller.ts
+│   │   │   └── sharing/                   # Neighbourhood sharing
+│   │   │       ├── sharing-controller.ts
+│   │   │       ├── sharing-router.ts
+│   │   │       ├── sharing-service.ts
+│   │   │       └── sharing-types.ts
+│   │   ├── config/                        # Configuration files
+│   │   │   ├── app.ts                      # App configuration
+│   │   │   │   ├── clerk.ts                # Clerk auth config
+│   │   │   │   ├── cloudinary.ts           # Cloudinary config
+│   │   │   │   └── database.ts             # Database connection
+│   │   ├── middleware/                     # Express middleware
+│   │   │   ├── auth.ts                     # Authentication middleware
+│   │   │   ├── fileUpload.ts               # File upload middleware
+│   │   │   └── index.ts                    # Middleware setup
+│   │   ├── services/                       # Business logic services
+│   │   │   ├── aiAnalyticsService.ts      # AI analytics service
+│   │   │   └── ocr-service.ts             # OCR processing service
+│   │   ├── utils/                          # Utility functions
+│   │   │   └── uploadImage.ts              # Image upload utilities
+│   │   └── *.ts                            # Main app files (index, server, router)
+│   ├── prisma/                             # Database schema and migrations
+│   │   ├── schema.prisma                   # Database schema
+│   │   ├── seed.ts                         # Database seeding
+│   │   ├── seed-specific-users.ts          # Specific user seeding
+│   │   └── migrations/                     # Prisma migrations
+│   ├── docs/                               # API documentation
+│   │   └── api-docs.md                     # API reference
+│   ├── eng.traineddata                     # OCR trained data
+│   └── package.json                        # Backend dependencies
 ├── test-connection.ts               # Database connection test script
 └── README.md                        # This file
 ```
@@ -301,13 +428,15 @@ npx ts-node test-connection.ts
 
 3. **Core Features:**
    - **Dashboard:** Overview of your food inventory and recent activity
+   - **Intelligent Dashboard:** AI-powered analytics with consumption patterns and SDG scoring
    - **Inventory Management:** Create and manage multiple inventories (e.g., kitchen, pantry)
-   - **Add Food Items:** Scan receipts, add items manually, or select from the food catalog
-   - **Track Expiration:** Monitor food freshness with smart alerts
-   - **Log Consumption:** Record what you eat to reduce waste
-   - **Daily Log:** Keep track of your daily food intake
-   - **Resources:** Access educational content about nutrition and food management
-   - **Profile:** Manage your dietary preferences and health information
+   - **OCR Receipt Scanning:** Upload grocery receipts to automatically add items
+   - **Image Upload:** Attach photos to inventory items for better tracking
+   - **Consumption Logging:** Track daily food consumption and waste reduction
+   - **Neighbourhood Sharing:** Share surplus food with neighbors or browse available listings
+   - **AI Chat Assistant:** Get personalized nutrition and food management advice
+   - **Admin Panel:** Manage food catalog and resources (admin users)
+   - **Educational Resources:** Access articles and videos about nutrition and sustainability
 
 4. **API Health Check:** Visit `http://localhost:3000/api/health` to verify the backend is running
 
@@ -325,37 +454,13 @@ The backend provides a RESTful API with the following main endpoints:
   - `GET/POST/PUT/DELETE /api/inventories/:id/items` - Inventory items
   - `POST /api/inventories/consumption` - Log food consumption
   - `GET /api/users/profile` - User profile management
+  - `GET/POST /api/sharing/listings` - Neighbourhood food sharing
+  - `POST /api/images/upload` - Image upload for receipts/photos
+  - `GET/POST /api/intelligence/dashboard` - AI-powered analytics
+  - `POST /api/intelligence/chat` - AI chat interface
+  - `GET/POST /api/admin/foods` - Admin food catalog management (admin only)
 
 Detailed API documentation is available in [server/docs/api-docs.md](server/docs/api-docs.md).
-
-## Current Implementation Status
-
-The application is currently in development with the following features implemented:
-
-### ✅ Completed Features
-- User authentication and profile management with Clerk
-- Food catalog with categories and expiration tracking
-- Inventory creation and management
-- Adding/removing food items from inventories
-- Consumption logging for waste tracking
-- Educational resources system with tagging
-- Responsive UI with modern design
-- Database schema with comprehensive relationships
-
-### 🚧 In Development / Planned Features
-- **Smart Pantry Engine:** Advanced inventory prioritization
-- **Price Optimization:** Integration with local market data
-- **Weather-Adaptive Alerts:** Real-time weather API integration
-- **Clinical Safety Shield:** Health condition-based filtering
-- **Leftover Upcycling:** Recipe suggestions for leftovers
-- **Barcode Scanning:** Receipt and product scanning
-- **Analytics Dashboard:** Consumption patterns and trends
-- **Community Features:** Neighbourhood sharing and collaboration
-
-### 🧪 Testing
-- Backend: Jest setup with basic test structure
-- Database: Connection testing script included
-- Frontend: Testing framework configured but tests pending
 
 ## Contributing
 

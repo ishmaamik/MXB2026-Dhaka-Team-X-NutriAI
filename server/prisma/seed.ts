@@ -458,13 +458,61 @@ async function main() {
     for (let i = 0; i < inventoryCount; i++) {
       const inventory = await prisma.inventory.create({
         data: {
-          name: `Inventory ${i + 1} for ${user.email}`,
+          name: `Inventory ${i + 1}`,
           description: `Auto-seeded inventory #${i + 1}`,
           isPrivate: false,
           createdById: user.id,
         },
       });
       console.log(`Seeded inventory ${inventory.name} for user ${user.email}`);
+
+      // Create inventory members for this inventory
+      const inventoryMembers = [];
+      
+      // Add the inventory creator as an admin member
+      const creatorMember = await prisma.inventoryMember.create({
+        data: {
+          inventoryId: inventory.id,
+          userId: user.id,
+          role: 'admin',
+          addedById: user.id,
+        },
+      });
+      inventoryMembers.push(creatorMember);
+
+      // Optionally add 1-2 additional members (could be other users or guest members)
+      const additionalMemberCount = Math.floor(Math.random() * 3); // 0-2 additional members
+      for (let m = 0; m < additionalMemberCount; m++) {
+        // Try to get another user, or create a guest member
+        const otherUsers = users.filter(u => u.id !== user.id);
+        if (otherUsers.length > 0 && Math.random() < 0.7) {
+          // 70% chance to add another user as member
+          const otherUser = otherUsers[Math.floor(Math.random() * otherUsers.length)];
+          const memberExists = inventoryMembers.some(im => im.userId === otherUser.id);
+          if (!memberExists) {
+            const userMember = await prisma.inventoryMember.create({
+              data: {
+                inventoryId: inventory.id,
+                userId: otherUser.id,
+                role: 'member',
+                addedById: user.id,
+              },
+            });
+            inventoryMembers.push(userMember);
+          }
+        } else {
+          // Create a guest member
+          const guestMember = await prisma.inventoryMember.create({
+            data: {
+              inventoryId: inventory.id,
+              memberName: `Guest Member ${m + 1}`,
+              role: 'member',
+              addedById: user.id,
+            },
+          });
+          inventoryMembers.push(guestMember);
+        }
+      }
 
       // Add 15-20 inventory items
       const itemCount = Math.floor(Math.random() * 6) + 15; // 15-20
@@ -496,11 +544,14 @@ async function main() {
         // Seed consumption log for this item
         if (Math.random() < 0.7) { // 70% chance to log consumption
           const consumedQty = Math.floor(Math.random() * quantity) + 1;
+          // Pick a random inventory member for consumption
+          const randomMember = inventoryMembers[Math.floor(Math.random() * inventoryMembers.length)];
+          
           await prisma.consumptionLog.create({
             data: {
               inventoryId: inventory.id,
               inventoryItemId: inventoryItem.id,
-              consumedById: null,
+              consumedById: randomMember.id,
               foodItemId: foodItem.id,
               itemName: foodItem.name,
               quantity: consumedQty,

@@ -1,43 +1,50 @@
-import { Link, useLocation } from 'react-router-dom';
+import { UserButton, useClerk, useUser } from '@clerk/clerk-react';
 import {
-  Leaf,
-  LayoutDashboard,
-  BookOpen,
-  Package,
   BookMarked,
-  Users,
-  User,
-  LogOut,
+  BookOpen,
+  Brain,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LayoutDashboard,
+  Leaf,
+  LogOut,
+  Package,
+  Shield,
+  User,
+  Users,
 } from 'lucide-react';
-import { UserButton, useClerk } from '@clerk/clerk-react';
+import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
   {
-    label: "Dashboard",
-    to: "/dashboard",
-    icon: LayoutDashboard
+    label: 'Dashboard',
+    to: '/dashboard',
+    icon: LayoutDashboard,
   },
   {
-    label: "Daily Log",
-    to: "/daily-log",
-    icon: BookOpen
+    label: 'AI Intelligence',
+    to: '/intelligence',
+    icon: Brain,
   },
   {
-    label: "Inventory",
-    to: "/inventory",
-    icon: Package
+    label: 'Daily Log',
+    to: '/daily-log',
+    icon: BookOpen,
   },
   {
-    label: "Resources",
-    to: "/resources",
-    icon: BookMarked
+    label: 'Inventory',
+    to: '/inventory',
+    icon: Package,
   },
   {
-    label: "Neighbourhood",
-    to: "/neighbourhood",
-    icon: Users
+    label: 'Resources',
+    to: '/resources',
+    icon: BookMarked,
+  },
+  {
+    label: 'Neighbourhood',
+    to: '/neighbourhood',
+    icon: Users,
   },
 ];
 
@@ -49,6 +56,10 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   const location = useLocation();
   const { signOut } = useClerk();
+  const { user } = useUser();
+
+  // Check if user has admin role
+  const isAdmin = user?.publicMetadata?.role === 'admin';
 
   const handleLogout = async () => {
     await signOut();
@@ -102,7 +113,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 p-3 overflow-y-auto">
           <div className="flex flex-col gap-1">
-            {navItems.map((item) => {
+            {navItems.map(item => {
               const Icon = item.icon;
               const isActive = location.pathname === item.to;
 
@@ -135,6 +146,30 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         {/* Footer Actions */}
         <div className="p-3 border-t border-border bg-secondary/5">
           <div className="flex flex-col gap-1">
+            {/* Admin Dashboard - only show for admin users */}
+            {isAdmin && (
+              <Link to="/admin" className="no-underline">
+                <button
+                  className={`w-full flex items-center gap-3 h-10 rounded-lg transition-all duration-200 ${
+                    location.pathname === '/admin'
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-foreground/70 hover:bg-secondary/20 hover:text-foreground'
+                  } ${
+                    collapsed ? 'px-0 justify-center' : 'px-3 justify-start'
+                  }`}
+                >
+                  <Shield className="w-4 h-4 flex-shrink-0" />
+                  <span
+                    className={`transition-all duration-200 ${
+                      collapsed ? 'opacity-0 w-0' : 'opacity-100'
+                    }`}
+                  >
+                    Admin Dashboard
+                  </span>
+                </button>
+              </Link>
+            )}
+
             {/* Profile */}
             <Link to="/profile" className="no-underline">
               <button
@@ -171,7 +206,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             </button>
           </div>
 
-          {/* Clerk User Button (only when expanded) */}
+          {/* Clerk User Button (only when expanded)
           {!collapsed && (
             <div className="mt-3 pt-3 border-t border-border">
               <div className="flex items-center gap-3 px-3">
@@ -192,7 +227,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </aside>
