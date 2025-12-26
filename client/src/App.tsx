@@ -20,6 +20,7 @@ import InventoryPage from './pages/InventoryPage';
 import NeighbourhoodPage from './pages/NeighbourhoodPage';
 import ProfilePage from './pages/ProfilePage';
 import { ResourcesPage } from './pages/ResourcesPage';
+import MealPlannerPage from './pages/MealPlannerPage';
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/edit" element={<EditProfilePage />} />
             <Route path="intelligence" element={<IntelligentDashboard />} />
+            <Route path="meal-planner" element={<MealPlannerPage />} />
           </Route>{' '}
           {/* Admin Dashboard */}
           <Route

@@ -12,6 +12,7 @@ import {
   Shield,
   User,
   Users,
+  Calendar,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -35,6 +36,11 @@ const navItems = [
     label: 'Inventory',
     to: '/inventory',
     icon: Package,
+  },
+  {
+    label: 'Meal Planner',
+    to: '/meal-planner',
+    icon: Calendar,
   },
   {
     label: 'Resources',
