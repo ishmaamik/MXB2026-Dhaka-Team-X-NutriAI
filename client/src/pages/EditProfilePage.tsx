@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Utensils, MapPin, DollarSign, Save, ArrowLeft } from 'lucide-react';
+import { User, Utensils, MapPin, DollarSign, Save, ArrowLeft, Ruler, Scale, Target, AlertCircle } from 'lucide-react';
 import { useProfile } from '../context/ProfileContext';
 import { useApi } from '../hooks/useApi';
 
@@ -18,6 +18,10 @@ export default function EditProfilePage() {
     dietaryPreference: '',
     location: '',
     budgetRange: '',
+    height: '',
+    weight: '',
+    weightPreference: '',
+    allergies: '',
   });
 
   useEffect(() => {
@@ -27,6 +31,10 @@ export default function EditProfilePage() {
         dietaryPreference: profile.profile.dietaryPreference || '',
         location: profile.profile.location || '',
         budgetRange: profile.profile.budgetRange?.toString() || '',
+        height: profile.profile.height?.toString() || '',
+        weight: profile.profile.weight?.toString() || '',
+        weightPreference: profile.profile.weightPreference || '',
+        allergies: profile.profile.allergies || '',
       });
     }
   }, [profile]);
@@ -59,6 +67,10 @@ export default function EditProfilePage() {
         dietaryPreference: formData.dietaryPreference || undefined,
         location: formData.location || undefined,
         budgetRange: formData.budgetRange ? parseFloat(formData.budgetRange) : undefined,
+        height: formData.height ? parseFloat(formData.height) : undefined,
+        weight: formData.weight ? parseFloat(formData.weight) : undefined,
+        weightPreference: formData.weightPreference || undefined,
+        allergies: formData.allergies || undefined,
       });
 
       await refreshProfile();
@@ -176,6 +188,84 @@ export default function EditProfilePage() {
               className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
               placeholder="e.g., 5000"
             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Height */}
+            <div>
+              <label htmlFor="height" className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                <Ruler className="w-4 h-4 text-primary" />
+                Height (cm)
+              </label>
+              <input
+                type="number"
+                id="height"
+                name="height"
+                value={formData.height}
+                onChange={handleChange}
+                min="0"
+                step="0.1"
+                className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                placeholder="e.g., 170"
+              />
+            </div>
+
+            {/* Weight */}
+            <div>
+              <label htmlFor="weight" className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                <Scale className="w-4 h-4 text-primary" />
+                Weight (kg)
+              </label>
+              <input
+                type="number"
+                id="weight"
+                name="weight"
+                value={formData.weight}
+                onChange={handleChange}
+                min="0"
+                step="0.1"
+                className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+                placeholder="e.g., 70"
+              />
+            </div>
+          </div>
+
+          {/* Weight Preference */}
+          <div>
+            <label htmlFor="weightPreference" className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+              <Target className="w-4 h-4 text-primary" />
+              Weight Goal
+            </label>
+            <select
+              id="weightPreference"
+              name="weightPreference"
+              value={formData.weightPreference}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+            >
+              <option value="">Select a goal</option>
+              <option value="lose">Lose Weight</option>
+              <option value="maintain">Maintain Weight</option>
+              <option value="gain">Gain Weight</option>
+            </select>
+          </div>
+
+          {/* Allergies */}
+          <div>
+            <label htmlFor="allergies" className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+              <AlertCircle className="w-4 h-4 text-primary" />
+              Allergies
+            </label>
+            <input
+              type="text"
+              id="allergies"
+              name="allergies"
+              value={formData.allergies}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground"
+              placeholder="e.g., Peanuts, Seafood, Dairy"
+            />
+            <p className="mt-1 text-xs text-foreground/50">Separate allergies with commas</p>
           </div>
 
           {/* Error Message */}

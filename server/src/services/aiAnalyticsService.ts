@@ -77,6 +77,26 @@ class AIAnalyticsService {
           },
         },
       },
+      {
+        type: 'function' as const,
+        function: {
+          name: 'generate_price_smart_meal_plan',
+          description: 'Generates a budget-friendly and health-conscious meal plan considering market prices and inventory',
+          parameters: {
+            type: 'object',
+            properties: {
+              userId: { type: 'string' },
+              timePeriod: {
+                type: 'string',
+                enum: ['breakfast', 'lunch', 'dinner', 'one_day', 'one_week'],
+                description: 'The period to plan for (single meals or full days/week)'
+              },
+              budget: { type: 'number', description: 'Budget in BDT' }
+            },
+            required: ['userId', 'timePeriod', 'budget']
+          }
+        }
+      }
     ];
   }
 
@@ -129,14 +149,12 @@ class AIAnalyticsService {
       const categoryBreakdown: Record<string, number> = {};
       const timePatterns: Record<string, number> = {};
 
-      // Calculate category consumption
       consumptionLogs.forEach(log => {
         const category = log.inventoryItem?.foodItem?.category || 'Unknown';
         categoryBreakdown[category] =
           (categoryBreakdown[category] || 0) + (log.quantity || 1);
       });
 
-      // Calculate time patterns (meal timing)
       consumptionLogs.forEach(log => {
         const hour = log.consumedAt.getHours();
         const timeSlot =
@@ -144,7 +162,6 @@ class AIAnalyticsService {
         timePatterns[timeSlot] = (timePatterns[timeSlot] || 0) + 1;
       });
 
-      // Calculate consistency score
       const daysCovered = new Set(
         consumptionLogs.map(log => log.consumedAt.toISOString().split('T')[0]),
       ).size;
@@ -186,8 +203,6 @@ class AIAnalyticsService {
   }): Promise<string> {
     try {
       const currentDate = new Date();
-
-      // Get user first
       const user = await prisma.user.findUnique({
         where: { clerkId: data.userId },
       });
@@ -216,15 +231,15 @@ class AIAnalyticsService {
         const expiryDate = new Date(item.expiryDate);
         const daysUntilExpiry = Math.ceil(
           (expiryDate.getTime() - currentDate.getTime()) /
-            (1000 * 60 * 60 * 24),
+          (1000 * 60 * 60 * 24),
         );
 
         const wasteRisk: 'High' | 'Medium' | 'Low' =
           daysUntilExpiry <= 2
             ? 'High'
             : daysUntilExpiry <= 5
-            ? 'Medium'
-            : 'Low';
+              ? 'Medium'
+              : 'Low';
 
         if (wasteRisk !== 'Low') {
           const estimatedWasteValue =
@@ -269,23 +284,13 @@ class AIAnalyticsService {
 
   private getWastePrevention(daysUntilExpiry: number): string[] {
     const suggestions: string[] = [];
-
     if (daysUntilExpiry <= 1) {
-      suggestions.push(
-        'Use immediately',
-        'Consider freezing if possible',
-        'Share with neighbors',
-      );
+      suggestions.push('Use immediately', 'Consider freezing if possible', 'Share with neighbors');
     } else if (daysUntilExpiry <= 3) {
-      suggestions.push(
-        'Plan meals around this item',
-        'Prepare in advance',
-        'Consider preserving',
-      );
+      suggestions.push('Plan meals around this item', 'Prepare in advance', 'Consider preserving');
     } else {
       suggestions.push('Monitor closely', 'Use in weekly meal plan');
     }
-
     return suggestions;
   }
 
@@ -293,7 +298,6 @@ class AIAnalyticsService {
     userId: string;
   }): Promise<string> {
     try {
-      // Get user first
       const user = await prisma.user.findUnique({
         where: { clerkId: data.userId },
       });
@@ -302,7 +306,6 @@ class AIAnalyticsService {
         throw new Error('User not found');
       }
 
-      // Get user's consumption data
       const consumptionLogs = await prisma.consumptionLog.findMany({
         where: {
           inventory: {
@@ -325,14 +328,12 @@ class AIAnalyticsService {
         log => log.consumedAt >= thirtyDaysAgo,
       );
 
-      // Calculate environmental impact
       const totalItemsConsumed = recentLogs.length;
-      const estimatedWastePrevented = totalItemsConsumed * 0.15; // 15% typical waste rate
-      const co2Saved = estimatedWastePrevented * 2.5; // kg CO2 per item
-      const waterSaved = estimatedWastePrevented * 150; // liters per item
-      const moneySaved = estimatedWastePrevented * 3; // average cost per item
+      const estimatedWastePrevented = totalItemsConsumed * 0.15;
+      const co2Saved = estimatedWastePrevented * 2.5;
+      const waterSaved = estimatedWastePrevented * 150;
+      const moneySaved = estimatedWastePrevented * 3;
 
-      // Calculate nutrition diversity score
       const uniqueCategories = new Set(
         recentLogs.map(log => log.inventoryItem?.foodItem?.category),
       ).size;
@@ -341,7 +342,6 @@ class AIAnalyticsService {
         100,
       );
 
-      // Calculate consistency metrics
       const daysWithLogs = new Set(
         recentLogs.map(log => log.consumedAt.toISOString().split('T')[0]),
       ).size;
@@ -350,22 +350,16 @@ class AIAnalyticsService {
       const achievements: string[] = [];
       const recommendations: string[] = [];
 
-      // Add achievements
       if (consistencyScore > 80) achievements.push('Consistency Champion');
       if (diversityScore > 70) achievements.push('Nutrition Explorer');
       if (totalItemsConsumed > 50) achievements.push('Tracking Master');
       if (co2Saved > 10) achievements.push('Eco Warrior');
 
-      // Add recommendations
       if (diversityScore < 60) {
-        recommendations.push(
-          'Try adding more variety to your diet from different food categories',
-        );
+        recommendations.push('Try adding more variety to your diet from different food categories');
       }
       if (consistencyScore < 70) {
-        recommendations.push(
-          'Try to log your meals more regularly for better insights',
-        );
+        recommendations.push('Try to log your meals more regularly for better insights');
       }
 
       const impact = {
@@ -406,35 +400,131 @@ class AIAnalyticsService {
     }
   }
 
-  // Main orchestration method
-  async generateIntelligentInsights(
-    userId: string,
-    query: string,
-  ): Promise<any> {
+  private async getMarketPrices() {
+    return {
+      proteins: [
+        { name: 'Broiler Chicken', price: 280, unit: 'kg', trend: 'up' },
+        { name: 'Layer Chicken', price: 350, unit: 'kg', trend: 'stable' },
+        { name: 'Beef', price: 780, unit: 'kg', trend: 'up' },
+        { name: 'Mutton', price: 1100, unit: 'kg', trend: 'stable' },
+        { name: 'Pangas Fish', price: 180, unit: 'kg', trend: 'down' },
+        { name: 'Tilapia Fish', price: 220, unit: 'kg', trend: 'stable' },
+        { name: 'Ruhi Fish', price: 350, unit: 'kg', trend: 'up' },
+        { name: 'Eggs', price: 145, unit: 'dozen', trend: 'stable' },
+        { name: 'Lentils (Masur Dal)', price: 140, unit: 'kg', trend: 'stable' }
+      ],
+      vegetables: [
+        { name: 'Potato', price: 55, unit: 'kg', trend: 'up' },
+        { name: 'Onion', price: 120, unit: 'kg', trend: 'up' },
+        { name: 'Green Chili', price: 200, unit: 'kg', trend: 'up' },
+        { name: 'Tomato', price: 100, unit: 'kg', trend: 'down' },
+        { name: 'Brinjal', price: 80, unit: 'kg', trend: 'stable' },
+        { name: 'Spinach', price: 20, unit: 'bunch', trend: 'stable' }
+      ],
+      grains: [
+        { name: 'Miniket Rice', price: 72, unit: 'kg', trend: 'stable' },
+        { name: 'Nazirshail Rice', price: 85, unit: 'kg', trend: 'up' },
+        { name: 'Atta (Flour)', price: 55, unit: 'kg', trend: 'stable' }
+      ],
+      lastUpdated: new Date().toISOString()
+    };
+  }
+
+  private async generatePriceSmartMealPlan(data: {
+    userId: string;
+    timePeriod: 'breakfast' | 'lunch' | 'dinner' | 'one_day' | 'one_week';
+    budget: number;
+  }): Promise<string> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { clerkId: data.userId },
+        include: { profile: true }
+      });
+
+      if (!user) throw new Error('User not found');
+
+      const inventory = await this.getCurrentInventoryItems(data.userId);
+      const marketPrices = await this.getMarketPrices();
+
+      return JSON.stringify({
+        success: true,
+        userProfile: {
+          height: (user.profile as any)?.height,
+          weight: (user.profile as any)?.weight,
+          preference: (user.profile as any)?.weightPreference,
+          allergies: (user.profile as any)?.allergies,
+          dietaryPreference: user.profile?.dietaryPreference
+        },
+        inventory: inventory.map(i => ({
+          name: i.customName || i.foodItem?.name,
+          quantity: i.quantity,
+          unit: i.unit,
+          expiry: i.expiryDate
+        })),
+        marketPrices,
+        request: {
+          timePeriod: data.timePeriod,
+          budget: data.budget
+        }
+      });
+    } catch (error: any) {
+      return JSON.stringify({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async generateIntelligentInsights(userId: string, query: string): Promise<any> {
     const tools = {
       analyze_consumption_patterns: this.analyzeConsumptionPatterns.bind(this),
       predict_waste: this.predictWaste.bind(this),
       generate_impact_analytics: this.generateImpactAnalytics.bind(this),
+      generate_price_smart_meal_plan: this.generatePriceSmartMealPlan.bind(this),
     };
+
+    const systemPrompt = `You are an AI assistant for a food waste management app. You help users by:
+        - Analyzing consumption patterns and providing insights
+        - Predicting potential food waste and suggesting prevention
+        - Generating environmental and financial impact analytics
+        - Generating Price-Smart Meal Plans considering market prices in Bangladesh and user inventory
+
+        IMPORTANT: For "Price-Smart Meal Plans", follow these rules:
+        1. Consider the user's health metrics and allergies.
+        2. Calculate the required nutrition based on their profile.
+        3. For EACH meal, provide TWO distinct options:
+           - Option 1 (Inventory-Based): Use ingredients from the user's currently available inventory.
+           - Option 2 (Market-Based): Suggest a health-conscious and budget-friendly option.
+        4. Respect the BDT budget strictly for the ENTIRE period.
+        5. For single meals, 1 meal. For one day, 5 meals. For one week, 21 meals.
+        6. Always state if inventory ingredients are insufficient. 
+        7. MANDATORY: For meal plans, you MUST return a structured JSON object as your ONLY response.
+        8. REQUIRED JSON STRUCTURE:
+           {
+             "isMealPlan": true,
+             "summary": "Nutrition/budget summary",
+             "meals": [
+               {
+                 "type": "Breakfast/Lunch/Dinner",
+                 "name": "Dish Name",
+                 "nutrition": { "calories": 400, "protein": "20g", "carbs": "50g", "fat": "15g" },
+                 "option1": { "name": "Inventory Version", "items": ["item1"], "cost": 0 },
+                 "option2": { "name": "Market Version", "items": ["item2"], "cost": 150 }
+               }
+             ],
+             "totalEstimatedCost": 1200
+           }
+        9. Avoid conversational preamble. Output strictly the JSON if a meal plan is requested.
+        10. Strictly adhere to the BDT budget.
+
+        User ID is "${userId}". Always use the tools to get data.`;
 
     const messages: any[] = [
       {
         role: 'system',
-        content: `You are an AI assistant for a food waste management app. You help users by:
-        - Analyzing consumption patterns and providing insights
-        - Predicting potential food waste and suggesting prevention
-        - Generating environmental and financial impact analytics
-
-        IMPORTANT: The user ID is already provided as "${userId}". Always use the available tools to gather actual data from the user's account.
-        When the user asks for analysis, consumption patterns, waste prediction, or impact analytics, immediately use the appropriate tools.
-        
-        Use the provided tools to gather data and provide comprehensive, actionable insights.
-        Always be helpful, encouraging, and focused on reducing food waste while improving nutrition.`,
+        content: systemPrompt,
       },
-      {
-        role: 'user',
-        content: query,
-      },
+      { role: 'user', content: query },
     ];
 
     const maxIterations = 3;
@@ -443,17 +533,15 @@ class AIAnalyticsService {
     while (iteration < maxIterations) {
       try {
         const response = await this.groqClient.chat.completions.create({
-          model: 'moonshotai/kimi-k2-instruct-0905',
+          model: 'llama-3.3-70b-versatile',
           messages: messages,
           tools: this.getToolSchemas(),
           tool_choice: 'auto',
-          temperature: 0.3,
-          max_tokens: 2048,
+          temperature: 0.1,
+          max_tokens: 4096,
         });
 
         const responseMessage = response.choices[0].message;
-
-        // If no tool calls, return final response
         if (!responseMessage.tool_calls) {
           return {
             success: true,
@@ -462,27 +550,18 @@ class AIAnalyticsService {
           };
         }
 
-        // Add assistant message to conversation
         messages.push(responseMessage);
 
-        // Execute tool calls
         for (const toolCall of responseMessage.tool_calls) {
           try {
             const functionName = toolCall.function.name;
             const functionArgs = JSON.parse(toolCall.function.arguments);
-
-            // Ensure userId is included in tool calls
-            if (!functionArgs.userId) {
-              functionArgs.userId = userId;
-            }
+            if (!functionArgs.userId) functionArgs.userId = userId;
 
             const toolFunction = tools[functionName as keyof typeof tools];
-            if (!toolFunction) {
-              throw new Error(`Unknown tool: ${functionName}`);
-            }
+            if (!toolFunction) throw new Error(`Unknown tool: ${functionName}`);
 
             const result = await toolFunction(functionArgs);
-
             messages.push({
               role: 'tool',
               tool_call_id: toolCall.id,
@@ -490,37 +569,30 @@ class AIAnalyticsService {
               content: result,
             });
           } catch (error: any) {
-            // Add error result
             messages.push({
               role: 'tool',
               tool_call_id: toolCall.id,
               name: toolCall.function.name,
-              content: JSON.stringify({
-                success: false,
-                error: error.message,
-              }),
+              content: JSON.stringify({ success: false, error: error.message }),
             });
           }
         }
-
         iteration++;
       } catch (error: any) {
         return {
           success: false,
           error: `AI service error: ${error.message}`,
-          fallback:
-            "I'm having trouble accessing your data right now. Please try again later.",
+          fallback: "I'm having trouble accessing your data right now. Please try again later.",
         };
       }
     }
 
-    // Get final response after tool execution
     try {
       const finalResponse = await this.groqClient.chat.completions.create({
-        model: 'moonshotai/kimi-k2-instruct-0905',
+        model: 'llama-3.3-70b-versatile',
         messages: messages,
-        temperature: 0.3,
-        max_tokens: 1024,
+        temperature: 0.1,
+        max_tokens: 4000,
       });
 
       return {
@@ -532,23 +604,13 @@ class AIAnalyticsService {
     } catch (error: any) {
       return {
         success: false,
-        error: `Final response error: ${error.message}`,
-        fallback: 'Analysis completed but unable to generate final summary.',
+        error: `Final response generation error: ${error.message}`,
       };
     }
   }
-
-  // Direct consumption analysis that always uses tools
-  async getConsumptionAnalysis(
-    userId: string,
-    timeframe: string = '30days',
-  ): Promise<any> {
+  async getConsumptionAnalysis(userId: string, timeframe: string = '30days'): Promise<any> {
     try {
-      // Force tool execution for consumption analysis
-      const consumptionData = await this.analyzeConsumptionPatterns({
-        userId,
-        timeframe,
-      });
+      const consumptionData = await this.analyzeConsumptionPatterns({ userId, timeframe });
       const parsedData = JSON.parse(consumptionData);
 
       if (!parsedData.success) {
@@ -559,19 +621,16 @@ class AIAnalyticsService {
         };
       }
 
-      // Generate AI interpretation of the data
       const interpretation = await this.groqClient.chat.completions.create({
-        model: 'moonshotai/kimi-k2-instruct-0905',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           {
             role: 'system',
-            content: `You are a food waste management expert. Analyze the following consumption data and provide insights, recommendations, and encouragement to the user. Be specific about trends, achievements, and areas for improvement.`,
+            content: `You are a food waste management expert. Analyze the following consumption data and provide insights, recommendations, and encouragement to the user.`,
           },
           {
             role: 'user',
-            content: `Here is my consumption data for the last ${timeframe}: ${JSON.stringify(
-              parsedData.patterns,
-            )}`,
+            content: `Here is my consumption data for the last ${timeframe}: ${JSON.stringify(parsedData.patterns)}`,
           },
         ],
         temperature: 0.7,
@@ -591,24 +650,16 @@ class AIAnalyticsService {
         },
       };
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-        fallback: 'Unable to analyze consumption patterns at this time.',
-      };
+      return { success: false, error: error.message, fallback: 'Unable to analyze consumption patterns at this time.' };
     }
   }
 
-  // Quick insights for dashboard
   async getDashboardInsights(userId: string): Promise<any> {
     try {
       const insights = await Promise.all([
         this.analyzeConsumptionPatterns({ userId, timeframe: '7days' }),
         this.generateImpactAnalytics({ userId }),
-        this.predictWaste({
-          userId,
-          items: await this.getCurrentInventoryItems(userId),
-        }),
+        this.predictWaste({ userId, items: await this.getCurrentInventoryItems(userId) }),
       ]);
 
       return {
@@ -620,36 +671,22 @@ class AIAnalyticsService {
         },
       };
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.message,
-      };
+      return { success: false, error: error.message };
     }
   }
 
   private async getCurrentInventoryItems(userId: string) {
-    // Get user first
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
-
-    if (!user) {
-      return [];
-    }
+    const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+    if (!user) return [];
 
     const items = await prisma.inventoryItem.findMany({
       where: {
-        inventory: {
-          createdBy: {
-            clerkId: userId,
-          },
-        },
+        inventory: { createdBy: { clerkId: userId } },
         quantity: { gt: 0 },
       },
       include: { foodItem: true },
       take: 50,
     });
-
     return items;
   }
 }

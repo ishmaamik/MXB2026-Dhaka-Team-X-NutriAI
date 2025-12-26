@@ -64,4 +64,9 @@ router.get(
   intelligentDashboardController.getSeasonalInsights,
 );
 
+// Saved Meal Plans
+router.post('/meal-plans/save', intelligentDashboardController.saveMealPlan);
+router.get('/meal-plans/saved', intelligentDashboardController.getSavedMealPlans);
+router.post('/meal-plans/consume', intelligentDashboardController.consumeMeal);
+
 export { router as intelligenceRouter };

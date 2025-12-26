@@ -1,7 +1,156 @@
 import { Request, Response } from 'express';
 import { aiAnalyticsService } from '../../services/aiAnalyticsService';
+import prisma from '../../config/database';
+import { InventoryService } from '../inventories/inventory-service';
+
+const inventoryService = new InventoryService();
 
 export class IntelligentDashboardController {
+  // Save a meal plan
+  async saveMealPlan(req: Request, res: Response) {
+    try {
+      const clerkId = req.auth?.userId;
+      if (!clerkId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const user = await prisma.user.findUnique({ where: { clerkId } });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const { plan } = req.body;
+      if (!plan) {
+        return res.status(400).json({ error: 'Meal plan data is required' });
+      }
+
+      const savedPlan = await prisma.mealPlan.create({
+        data: {
+          userId: user.id,
+          weekStartDate: new Date(),
+          budget: plan.totalEstimatedCost || 0,
+          meals: plan.meals,
+          shoppingList: {},
+          totalCost: plan.totalEstimatedCost || 0,
+          nutritionSummary: {},
+          status: 'active',
+        },
+      });
+
+      res.json({
+        success: true,
+        data: savedPlan,
+        message: 'Meal plan saved successfully',
+      });
+    } catch (error: any) {
+      console.error('Save meal plan error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to save meal plan',
+      });
+    }
+  }
+
+  // Get saved meal plans
+  async getSavedMealPlans(req: Request, res: Response) {
+    try {
+      const clerkId = req.auth?.userId;
+      if (!clerkId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const user = await prisma.user.findUnique({ where: { clerkId } });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const savedPlans = await prisma.mealPlan.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      res.json({
+        success: true,
+        data: savedPlans,
+      });
+    } catch (error: any) {
+      console.error('Get saved plans error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to fetch saved plans',
+      });
+    }
+  }
+
+  // Consume a meal from a plan
+  async consumeMeal(req: Request, res: Response) {
+    try {
+      const clerkId = req.auth?.userId;
+      if (!clerkId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { mealName, items } = req.body;
+      if (!items || !Array.isArray(items)) {
+        return res.status(400).json({ error: 'Items list is required' });
+      }
+
+      const userInventories = await inventoryService.getUserInventories(clerkId);
+      const inventoryId = userInventories[0]?.id;
+
+      if (!inventoryId) {
+        return res.status(400).json({ error: 'No inventory found to consume from' });
+      }
+
+      const results = [];
+      for (const itemName of items) {
+        const inventoryItems = await prisma.inventoryItem.findMany({
+          where: {
+            inventoryId,
+            OR: [
+              { customName: { contains: itemName, mode: 'insensitive' } },
+              { foodItem: { name: { contains: itemName, mode: 'insensitive' } } }
+            ]
+          }
+        });
+
+        if (inventoryItems.length > 0) {
+          const item = inventoryItems[0];
+          // Log consumption for 1 unit (or some logic to determine amount)
+          await inventoryService.logConsumption(clerkId, {
+            inventoryId,
+            inventoryItemId: item.id,
+            itemName: item.customName || itemName,
+            quantity: 1, // Defaulting to 1 for now
+            unit: item.unit || 'pcs'
+          });
+          results.push({ item: itemName, status: 'consumed_from_inventory', inventoryItemId: item.id });
+        } else {
+          // MODIFIED: Log consumption even if not in inventory (Market Buy)
+          await inventoryService.logConsumption(clerkId, {
+            inventoryId,
+            itemName: itemName,
+            quantity: 1,
+            unit: 'pcs' // Default for market items
+          });
+          results.push({ item: itemName, status: 'consumed_external' });
+        }
+      }
+
+      res.json({
+        success: true,
+        data: results,
+        message: `Processed consumption for ${mealName}. Logs generated for all items.`,
+      });
+    } catch (error: any) {
+      console.error('Consume meal error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to consume meal',
+      });
+    }
+  }
+
   // Get AI-powered dashboard insights
   async getDashboardInsights(req: Request, res: Response) {
     try {
@@ -70,7 +219,6 @@ export class IntelligentDashboardController {
 
       const { timeframe = '30days' } = req.query;
 
-      // Use direct consumption analysis method
       const analysis = await aiAnalyticsService.getConsumptionAnalysis(
         userId,
         timeframe as string,
@@ -129,18 +277,22 @@ export class IntelligentDashboardController {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      const { budget, preferences } = req.body;
+      const { budget, timePeriod, preferences } = req.body;
 
-      let query = `Create an optimized weekly meal plan using my current inventory. `;
-      if (budget) query += `My weekly budget is $${budget}. `;
+      let query = `Generate a price-smart meal plan for the period: ${timePeriod || 'one_day'}. `;
+      if (budget) query += `The total budget for this entire period is ${budget} BDT. `;
       if (preferences)
-        query += `My dietary preferences: ${JSON.stringify(preferences)}. `;
-      query += `Focus on minimizing waste and maximizing nutrition.`;
+        query += `Dietary preferences: ${JSON.stringify(preferences)}. `;
+      query += `Use my inventory where possible. Return the result in the requested JSON format.`;
 
       const mealPlan = await aiAnalyticsService.generateIntelligentInsights(
         userId,
         query,
       );
+
+      if (!mealPlan.success) {
+        throw new Error(mealPlan.error || 'Failed to generate meal plan');
+      }
 
       res.json({
         success: true,

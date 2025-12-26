@@ -218,4 +218,44 @@
   .blur-3xl {
     filter: blur(64px);
   }
+
+  /* Markdown Styles */
+  .prose h1 {
+    @apply text-2xl font-bold mt-6 mb-4;
+    color: #262626;
+  }
+
+  .prose h2 {
+    @apply text-xl font-bold mt-5 mb-3;
+    color: #262626;
+  }
+
+  .prose h3 {
+    @apply text-lg font-bold mt-4 mb-2;
+    color: #262626;
+  }
+
+  .prose p {
+    @apply mb-4 leading-relaxed;
+    color: rgba(38, 38, 38, 0.8);
+  }
+
+  .prose ul {
+    @apply list-disc pl-6 mb-4 space-y-2;
+    color: rgba(38, 38, 38, 0.8);
+  }
+
+  .prose ol {
+    @apply list-decimal pl-6 mb-4 space-y-2;
+    color: rgba(38, 38, 38, 0.8);
+  }
+
+  .prose li {
+    @apply pl-1;
+  }
+
+  .prose strong {
+    @apply font-bold;
+    color: #262626;
+  }
 }

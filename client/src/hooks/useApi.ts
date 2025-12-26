@@ -15,6 +15,10 @@ export interface UserProfile {
     dietaryPreference: string | null;
     location: string | null;
     budgetRange: number | null;
+    height: number | null;
+    weight: number | null;
+    weightPreference: string | null;
+    allergies: string | null;
   } | null;
 }
 
@@ -23,6 +27,10 @@ export interface UpdateProfileData {
   dietaryPreference?: string;
   location?: string;
   budgetRange?: number;
+  height?: number;
+  weight?: number;
+  weightPreference?: string;
+  allergies?: string;
 }
 
 // Custom hook for authenticated API calls
@@ -59,6 +67,22 @@ export function useApi() {
       fetchWithAuth('/users/profile', {
         method: 'PUT',
         body: JSON.stringify(data),
+      }),
+    getOptimizedMealPlan: (data: { budget?: number; timePeriod?: string; preferences?: any }) =>
+      fetchWithAuth('/intelligence/meal-plan', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    saveMealPlan: (plan: any) =>
+      fetchWithAuth('/intelligence/meal-plans/save', {
+        method: 'POST',
+        body: JSON.stringify({ plan }),
+      }),
+    getSavedMealPlans: () => fetchWithAuth('/intelligence/meal-plans/saved'),
+    consumeMeal: (mealName: string, items: string[]) =>
+      fetchWithAuth('/intelligence/meal-plans/consume', {
+        method: 'POST',
+        body: JSON.stringify({ mealName, items }),
       }),
   };
 }

@@ -39,7 +39,16 @@ export class UserController {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      const { fullName, dietaryPreference, location, budgetRange } = req.body;
+      const {
+        fullName,
+        dietaryPreference,
+        location,
+        budgetRange,
+        height,
+        weight,
+        weightPreference,
+        allergies,
+      } = req.body;
 
       if (budgetRange !== undefined && (budgetRange < 0 || isNaN(budgetRange))) {
         return res.status(400).json({
@@ -53,6 +62,10 @@ export class UserController {
         dietaryPreference,
         location,
         budgetRange: budgetRange ? parseFloat(budgetRange) : undefined,
+        height: height ? parseFloat(height) : undefined,
+        weight: weight ? parseFloat(weight) : undefined,
+        weightPreference,
+        allergies,
       });
 
       res.json({

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Mail, Utensils, MapPin, DollarSign, Edit, ArrowLeft } from 'lucide-react';
+import { User, Mail, Utensils, MapPin, DollarSign, Edit, ArrowLeft, Ruler, Scale, Target, AlertCircle } from 'lucide-react';
 import { useProfile } from '../context/ProfileContext';
 
 export default function ProfilePage() {
@@ -133,6 +133,52 @@ export default function ProfilePage() {
               <p className="text-foreground">
                 {profile?.profile?.budgetRange ? `$${profile.profile.budgetRange.toFixed(2)}` : 'Not set'}
               </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
+            {/* Height */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Ruler className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground/70 mb-1">Height</p>
+                <p className="text-foreground">{profile?.profile?.height ? `${profile.profile.height} cm` : 'Not set'}</p>
+              </div>
+            </div>
+
+            {/* Weight */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Scale className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground/70 mb-1">Weight</p>
+                <p className="text-foreground">{profile?.profile?.weight ? `${profile.profile.weight} kg` : 'Not set'}</p>
+              </div>
+            </div>
+
+            {/* Weight Goal */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Target className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground/70 mb-1">Weight Goal</p>
+                <p className="text-foreground capitalize">{profile?.profile?.weightPreference || 'Not set'}</p>
+              </div>
+            </div>
+
+            {/* Allergies */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground/70 mb-1">Allergies</p>
+                <p className="text-foreground">{profile?.profile?.allergies || 'None reported'}</p>
+              </div>
             </div>
           </div>
         </div>
