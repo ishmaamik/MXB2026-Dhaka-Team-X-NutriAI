@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { aiAnalyticsService } from '../../services/aiAnalyticsService';
+import { aiQueue, aiQueueEvents } from '../../config/queue';
 
 export class IntelligentDashboardController {
   // Get AI-powered dashboard insights
@@ -102,10 +103,17 @@ export class IntelligentDashboardController {
       const query = `Predict potential food waste in my current inventory. 
                      Show me items at risk and suggest prevention strategies.`;
 
-      const prediction = await aiAnalyticsService.generateIntelligentInsights(
+      // Offload to BullMQ
+      const job = await aiQueue.add('ANALYZE_WASTE', {
         userId,
-        query,
-      );
+        action: 'ANALYZE_WASTE',
+        data: { query }
+      });
+
+      console.log(`🧠 [Controller] Queued Waste Analysis job: ${job.id}`);
+
+      // Wait for result (timeout 30s)
+      const prediction = await job.waitUntilFinished(aiQueueEvents, 30000);
 
       res.json({
         success: true,

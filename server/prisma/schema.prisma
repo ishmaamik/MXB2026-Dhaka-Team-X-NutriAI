@@ -30,6 +30,7 @@ model User {
   mealPlans           MealPlan[]
   aiInsights          AiInsight[]
   consumptionPatterns ConsumptionPattern[]
+  auditLogs           AuditLog[]
 }
 
 model UserProfile {
@@ -331,4 +332,13 @@ model SharingLog {
   deletedAt     DateTime?
   listing       FoodListing @relation("ListingSharingLogs", fields: [listingId], references: [id])
   claimer       User?       @relation("UserSharingLogs", fields: [claimerId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String   // e.g. "CONSUMPTION", "LOGIN", "ITEM_ADDED"
+  details   Json
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }

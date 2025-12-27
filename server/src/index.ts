@@ -4,6 +4,9 @@ import app from './server';
 import config from './config/app';
 import prisma from './config/database';
 import baseMiddleware from './middleware';
+import './workers/audit-worker';
+import './workers/image-worker';
+import './workers/ai-worker';
 
 
 // Add base middleware

@@ -1,0 +1,42 @@
+🔍 Inspecting Latest Image Queue Failure...
+
+--- Job ID: 1 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "file": {
+    "id": "a9413c39-89bf-4cbc-89e2-07cff8c668d9",
+    "userId": "b5378684-a574-4b56-8547-5d022fc990a7",
+    "url": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766784933/nutritrack-receipts/nvlfncrux29kbru3owoe.jpg",
+    "filename": "OIP.webp",
+    "mimeType": "image/webp",
+    "size": 21028,
+    "foodItemId": null,
+    "inventoryId": "8898bed9-3339-488f-9bd4-206163062f7b",
+    "inventoryItemId": null,
+    "createdAt": "2025-12-26T21:35:36.328Z",
+    "isDeleted": false,
+    "deletedAt": null
+  },
+  "metadata": {
+    "inventoryId": "8898bed9-3339-488f-9bd4-206163062f7b",
+    "imageUrl": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766784933/nutritrack-receipts/nvlfncrux29kbru3owoe.jpg",
+    "extractItems": true
+  },
+  "type": "process-ocr"
+}
+Failed Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stacktrace: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.imageWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\image-worker.ts:79:14)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26

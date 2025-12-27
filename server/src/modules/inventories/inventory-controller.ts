@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UploadedFile } from 'express-fileupload';
 import { imageService } from '../images/image-service';
+import { auditQueue, imageQueue } from '../../config/queue';
 import { InventoryService } from './inventory-service';
 import {
   ConsumptionLogFilters,
@@ -249,76 +250,40 @@ export class InventoryController {
 
       const imageFile = req.files.image as UploadedFile;
 
-      // Upload image and extract text using OCR
+      // Upload image first (synchronous to get URL)
       console.log(
-        '🖼️ [Controller] Processing image for inventory:',
+        '🖼️ [Controller] Uploading image for inventory:',
         inventoryId,
       );
-      const result = await imageService.uploadImageWithOCR(imageFile, userId, {
+      
+      // We use the base uploadImage which handles Cloudinary + DB record
+      const savedFile = await imageService.uploadImage(imageFile, userId, {
         inventoryId,
-        extractItems: true,
       });
 
-      if (!result.ocr) {
-        res.status(500).json({ error: 'Failed to extract text from image' });
-        return;
-      }
+      console.log('✅ [Controller] Image uploaded:', savedFile.url);
 
-      // Add extracted items to inventory
-      const addedItems = [];
-      const errors = [];
+      // Queue the OCR task
+      const job = await imageQueue.add('process-ocr', {
+        userId,
+        file: { ...savedFile }, // Pass file details
+        metadata: {
+          inventoryId,
+          imageUrl: savedFile.url,
+          extractItems: true,
+        },
+        type: 'process-ocr'
+      });
 
-      for (const extractedItem of result.ocr.extractedItems) {
-        try {
-          console.log(
-            '➕ [Controller] Adding item to inventory:',
-            extractedItem.name,
-          );
+      console.log(`✅ [Controller] Queued OCR job: ${job.id}`);
 
-          const newItem = await this.inventoryService.addInventoryItem(
-            userId,
-            inventoryId,
-            {
-              customName: extractedItem.name,
-              quantity: extractedItem.quantity || 1,
-              unit: extractedItem.unit || 'pcs',
-              notes: `Added from image OCR (confidence: ${Math.round(
-                (extractedItem.confidence || 0.6) * 100,
-              )}%)`,
-            },
-          );
-
-          addedItems.push({
-            ...newItem,
-            originalOCR: extractedItem,
-          });
-        } catch (error) {
-          console.error(
-            '❌ [Controller] Error adding item:',
-            extractedItem.name,
-            error,
-          );
-          errors.push({
-            item: extractedItem.name,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-      }
-
-      res.status(201).json({
+      res.status(202).json({
         success: true,
-        message: `Successfully processed image. Added ${addedItems.length} items.`,
+        message: 'Image uploaded and processing started. Items will appear in inventory shortly.',
         data: {
-          image: result.file,
-          ocrText: result.ocr.text,
-          ocrConfidence: result.ocr.confidence,
-          addedItems,
-          errors: errors.length > 0 ? errors : undefined,
-          summary: {
-            totalExtracted: result.ocr.extractedItems.length,
-            successfullyAdded: addedItems.length,
-            failed: errors.length,
-          },
+          image: savedFile,
+          jobId: job.id,
+          status: 'processing'
         },
       });
     } catch (error) {
@@ -507,6 +472,18 @@ export class InventoryController {
           notes,
         },
       );
+
+      // Async Audit Log
+      auditQueue.add('audit-log', {
+        userId,
+        action: 'CONSUMPTION_LOGGED',
+        details: {
+          consumptionId: consumptionLog.id,
+          itemName,
+          quantity,
+          inventoryId,
+        },
+      });
 
       res.status(201).json(consumptionLog);
     } catch (error) {
