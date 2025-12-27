@@ -65,9 +65,19 @@ router.get(
   intelligentDashboardController.getSeasonalInsights,
 );
 
-// Saved Meal Plans
-router.post('/meal-plans/save', intelligentDashboardController.saveMealPlan);
-router.get('/meal-plans/saved', intelligentDashboardController.getSavedMealPlans);
-router.post('/meal-plans/consume', intelligentDashboardController.consumeMeal);
+// Estimate nutrition
+router.post(
+  '/estimate-nutrition',
+  intelligentDashboardController.estimateNutrition,
+);
+
+// Estimate price
+router.post('/estimate-price', intelligentDashboardController.estimatePrice);
+
+// Estimate item details
+router.post(
+  '/estimate-details',
+  intelligentDashboardController.estimateItemDetails,
+);
 
 export { router as intelligenceRouter };

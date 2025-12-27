@@ -24,6 +24,11 @@ export type InventoryItemRequest = {
   unit?: string;
   expiryDate?: Date;
   notes?: string;
+  // Nutrition Data (for creating FoodItem on the fly)
+  nutritionPerUnit?: any;
+  nutritionUnit?: string;
+  nutritionBasis?: number;
+  basePrice?: number;
 };
 
 export type UpdateInventoryItemRequest = {
@@ -34,7 +39,7 @@ export type UpdateInventoryItemRequest = {
 };
 
 export type ConsumptionLogRequest = {
-  inventoryId: string;
+  inventoryId?: string; // Optional
   inventoryItemId?: string;
   foodItemId?: string;
   itemName: string;
@@ -42,6 +47,14 @@ export type ConsumptionLogRequest = {
   unit?: string;
   consumedAt?: Date;
   notes?: string;
+  // Nutrients
+  calories?: number;
+  protein?: number;
+  carbohydrates?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
 };
 
 export type ConsumptionLogFilters = {
@@ -59,3 +72,29 @@ export type InventoryItemFilters = {
   category?: string;
   expiringSoon?: boolean;
 };
+
+export interface DailyNutrition {
+  date: string;
+  calories: number;
+  protein: number;
+  carbohydrates: number;
+  fat: number;
+  fiber: number;
+  sugar: number;
+  sodium: number;
+}
+
+export interface DailyCost {
+  date: string;
+  cost: number;
+}
+
+export interface ConsumptionAnalytics {
+  byCategory: Record<
+    string,
+    { category: string; consumptionCount: number; quantityConsumed: number }
+  >;
+  byTime: Record<string, { timePeriod: string; consumptionCount: number }>;
+  dailyNutrition: DailyNutrition[];
+  dailyCost: DailyCost[];
+}

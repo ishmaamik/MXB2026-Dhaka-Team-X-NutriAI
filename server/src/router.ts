@@ -25,6 +25,7 @@ router.get('/health', (req: Request, res: Response) => {
   });
 });
 
+
 // Public routes
 router.use('/foods', foodRouter);
 router.use('/resources', resourcesRouter);

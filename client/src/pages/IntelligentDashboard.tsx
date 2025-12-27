@@ -14,6 +14,20 @@ import {
 import React, { useCallback, useEffect, useState } from 'react';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import AIResponseDisplay from '../components/AIResponseDisplay';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  Legend,
+} from 'recharts';
 
 interface DashboardInsight {
   consumption?: {
@@ -23,6 +37,20 @@ interface DashboardInsight {
       timePatterns?: Record<string, number>;
       consistencyScore?: number;
       favoriteCategories?: string[];
+      dailyNutrition?: Array<{
+        date: string;
+        calories: number;
+        protein: number;
+        carbohydrates: number;
+        fat: number;
+        fiber: number;
+        sugar: number;
+        sodium: number;
+      }>;
+      dailyCost?: Array<{
+        date: string;
+        cost: number;
+      }>;
     };
     aiInsights?: string;
   };
@@ -340,6 +368,40 @@ const IntelligentDashboard: React.FC = () => {
                 <p className="text-sm text-gray-600">This month</p>
               </div>
             </div>
+
+             {/* Cost Chart - Overview */}
+             <div className="bg-white p-6 rounded-lg shadow">
+                 <h3 className="font-medium text-gray-900 mb-4">
+                   Spending Trend (Last 7 Days)
+                 </h3>
+                 {insights.consumption?.patterns?.dailyCost &&
+                 insights.consumption.patterns.dailyCost.length > 0 ? (
+                   <div className="h-64 w-full">
+                     <ResponsiveContainer width="100%" height="100%">
+                       <LineChart
+                         data={insights.consumption.patterns.dailyCost}
+                       >
+                         <CartesianGrid strokeDasharray="3 3" />
+                         <XAxis 
+                           dataKey="date" 
+                           tickFormatter={(str) => {
+                               const date = new Date(str);
+                               return `${date.getDate()}/${date.getMonth()+1}`;
+                           }}
+                         />
+                         <YAxis />
+                         <Tooltip formatter={(value) => [`$${value}`, 'Cost']} />
+                         <Legend />
+                         <Line type="monotone" dataKey="cost" stroke="#82ca9d" name="Cost ($)" strokeWidth={2} />
+                       </LineChart>
+                     </ResponsiveContainer>
+                   </div>
+                 ) : (
+                   <div className="h-32 flex items-center justify-center text-gray-500">
+                     <p>Not enough data to show spending trends.</p>
+                   </div>
+                 )}
+             </div>
 
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow">
@@ -731,7 +793,8 @@ const IntelligentDashboard: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                {insights.impact.impact.achievements?.length > 0 && (
+
+                {insights.impact.impact.achievements && insights.impact.impact.achievements.length > 0 && (
                   <div>
                     <h4 className="font-medium text-gray-900 mb-3">
                       Achievements
@@ -750,7 +813,7 @@ const IntelligentDashboard: React.FC = () => {
                     </div>
                   </div>
                 )}
-                {insights.impact.impact.recommendations?.length > 0 && (
+                {insights.impact.impact.recommendations && insights.impact.impact.recommendations.length > 0 && (
                   <div>
                     <h4 className="font-medium text-gray-900 mb-3">
                       Recommendations
@@ -795,6 +858,131 @@ const IntelligentDashboard: React.FC = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Nutrition Analysis
             </h2>
+            {/* Nutrition Charts */}
+            {insights.consumption?.patterns?.dailyNutrition &&
+              insights.consumption.patterns.dailyNutrition.length > 0 && (
+                <div className="space-y-6 mb-6">
+                  {/* Daily Calories & Macros Chart */}
+                  <div className="bg-white p-6 rounded-lg shadow">
+                    <h3 className="font-medium text-gray-900 mb-4">
+                      Daily Nutrient Intake
+                    </h3>
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={insights.consumption.patterns.dailyNutrition}
+                          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                        >
+                          <defs>
+                            <linearGradient
+                              id="colorCalories"
+                              x1="0"
+                              y1="0"
+                              x2="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="5%"
+                                stopColor="#8884d8"
+                                stopOpacity={0.8}
+                              />
+                              <stop
+                                offset="95%"
+                                stopColor="#8884d8"
+                                stopOpacity={0}
+                              />
+                            </linearGradient>
+                          </defs>
+                          <XAxis 
+                            dataKey="date" 
+                            tickFormatter={(str) => {
+                                const date = new Date(str);
+                                return `${date.getDate()}/${date.getMonth()+1}`;
+                            }}
+                          />
+                          <YAxis />
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <Tooltip />
+                          <Legend />
+                          <Area
+                            type="monotone"
+                            dataKey="calories"
+                            stroke="#8884d8"
+                            fillOpacity={1}
+                            fill="url(#colorCalories)"
+                            name="Calories (kcal)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Macros Breakdown */}
+                   <div className="bg-white p-6 rounded-lg shadow">
+                    <h3 className="font-medium text-gray-900 mb-4">
+                      Macronutrients Trend
+                    </h3>
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={insights.consumption.patterns.dailyNutrition}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tickFormatter={(str) => {
+                                const date = new Date(str);
+                                return `${date.getDate()}/${date.getMonth()+1}`;
+                            }}
+                          />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="protein" stackId="a" fill="#82ca9d" name="Protein (g)" />
+                          <Bar dataKey="carbohydrates" stackId="a" fill="#8884d8" name="Carbs (g)" />
+                          <Bar dataKey="fat" stackId="a" fill="#ffc658" name="Fat (g)" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {(!insights.consumption?.patterns?.dailyNutrition ||
+                insights.consumption.patterns.dailyNutrition.length === 0) && (
+                 <div className="bg-white p-6 rounded-lg shadow mb-6 text-center">
+                    <p className="text-gray-500">Log consumption to see nutrition trends.</p>
+                 </div>
+              )}
+
+             {/* Cost Chart */}
+             {insights.consumption?.patterns?.dailyCost &&
+              insights.consumption.patterns.dailyCost.length > 0 && (
+                <div className="bg-white p-6 rounded-lg shadow mb-6">
+                    <h3 className="font-medium text-gray-900 mb-4">
+                      Daily Food Cost
+                    </h3>
+                    <div className="h-80 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={insights.consumption.patterns.dailyCost}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="date" 
+                            tickFormatter={(str) => {
+                                const date = new Date(str);
+                                return `${date.getDate()}/${date.getMonth()+1}`;
+                            }}
+                          />
+                          <YAxis />
+                          <Tooltip formatter={(value) => [`$${value}`, 'Cost']} />
+                          <Legend />
+                          <Line type="monotone" dataKey="cost" stroke="#82ca9d" name="Cost ($)" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                </div>
+             )}
 
             {/* Display AI Insights if available */}
             {nutritionInsights && (

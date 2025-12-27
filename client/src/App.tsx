@@ -12,6 +12,7 @@ import Layout from './components/Layout';
 // Pages with Layout
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ProfileProvider } from './context/ProfileContext';
+import { BackgroundJobProvider } from './context/BackgroundJobContext';
 import DailyLogPage from './pages/DailyLogPage';
 import Dashboard from './pages/Dashboard';
 import EditProfilePage from './pages/EditProfilePage';
@@ -28,7 +29,8 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ProfileProvider>
-        <Routes>
+        <BackgroundJobProvider>
+          <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/sign-in" element={<SignInPage />} />
@@ -84,6 +86,7 @@ export default function App() {
             }
           />
         </Routes>
+        </BackgroundJobProvider>
       </ProfileProvider>
     </QueryClientProvider>
   );

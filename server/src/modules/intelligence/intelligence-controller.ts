@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
 import { aiAnalyticsService } from '../../services/aiAnalyticsService';
+import { aiQueue, aiQueueEvents } from '../../config/queue';
 import prisma from '../../config/database';
-import { InventoryService } from '../inventories/inventory-service';
-
-const inventoryService = new InventoryService();
+import { inventoryService } from '../inventories/inventory-service';
 
 export class IntelligentDashboardController {
   // Save a meal plan
@@ -250,10 +249,17 @@ export class IntelligentDashboardController {
       const query = `Predict potential food waste in my current inventory. 
                      Show me items at risk and suggest prevention strategies.`;
 
-      const prediction = await aiAnalyticsService.generateIntelligentInsights(
+      // Offload to BullMQ
+      const job = await aiQueue.add('ANALYZE_WASTE', {
         userId,
-        query,
-      );
+        action: 'ANALYZE_WASTE',
+        data: { query }
+      });
+
+      console.log(`🧠 [Controller] Queued Waste Analysis job: ${job.id}`);
+
+      // Wait for result (timeout 30s)
+      const prediction = await job.waitUntilFinished(aiQueueEvents, 30000);
 
       res.json({
         success: true,
@@ -521,6 +527,119 @@ export class IntelligentDashboardController {
       res.status(500).json({
         success: false,
         error: error.message || 'Failed to generate seasonal insights',
+      });
+    }
+  }
+  // Estimate nutrition
+  async estimateNutrition(req: Request, res: Response) {
+    try {
+      const {
+        foodName,
+        quantity,
+        unit,
+        nutritionPerUnit,
+        nutritionUnit,
+        nutritionBasis,
+      } = req.body;
+      if (!foodName || !quantity || !unit) {
+        return res.status(400).json({
+          error: 'foodName, quantity, and unit are required',
+        });
+      }
+
+      const baseData =
+        nutritionPerUnit && nutritionBasis
+          ? { nutritionPerUnit, nutritionUnit, nutritionBasis }
+          : undefined;
+
+      const nutrition = await aiAnalyticsService.estimateNutrition(
+        foodName,
+        Number(quantity),
+        unit,
+        baseData,
+      );
+
+      res.json({
+        success: true,
+        data: nutrition,
+        message: 'Nutrition estimated successfully',
+      });
+    } catch (error: any) {
+      console.error('Nutrition estimation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to estimate nutrition',
+      });
+    }
+  }
+
+  // Estimate price
+  async estimatePrice(req: Request, res: Response) {
+    try {
+      const {
+        foodName,
+        quantity,
+        unit,
+        basePrice,
+        nutritionUnit,
+        nutritionBasis,
+      } = req.body;
+      if (!foodName || !quantity || !unit) {
+        return res.status(400).json({
+          error: 'foodName, quantity, and unit are required',
+        });
+      }
+
+      const baseData =
+        basePrice && nutritionBasis
+          ? { basePrice, nutritionUnit, nutritionBasis }
+          : undefined;
+
+      const price = await aiAnalyticsService.estimatePrice(
+        foodName,
+        Number(quantity),
+        unit,
+        baseData,
+      );
+
+      res.json({
+        success: true,
+        data: price,
+        message: 'Price estimated successfully',
+      });
+    } catch (error: any) {
+      console.error('Price estimation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to estimate price',
+      });
+    }
+  }
+  // Estimate item details
+  async estimateItemDetails(req: Request, res: Response) {
+    try {
+      const { foodName, region } = req.body;
+      if (!foodName) {
+        return res.status(400).json({
+          error: 'foodName is required',
+        });
+      }
+
+      const details = await aiAnalyticsService.estimateItemDetails(
+        foodName,
+        region,
+      );
+
+      res.json({
+        success: true,
+        data: details,
+        message: 'Item details estimated successfully',
+      });
+    } catch (error: any) {
+      console.error('Item details estimation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to estimate item details',
       });
     }
   }

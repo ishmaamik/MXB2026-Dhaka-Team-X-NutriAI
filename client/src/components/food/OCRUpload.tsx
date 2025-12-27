@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-react';
 import { AlertCircle, CheckCircle, Loader2, Upload, X } from 'lucide-react';
 import React, { useState } from 'react';
+import { ReviewScanModal } from './ReviewScanModal';
 
 interface OCRUploadProps {
   inventoryId: string;
@@ -19,8 +20,10 @@ export const OCRUpload: React.FC<OCRUploadProps> = ({
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadComplete, setUploadComplete] = useState(false);
-  const [extractedItems, setExtractedItems] = useState<any[]>([]);
+  
+  // New state for Review Flow
+  const [showReview, setShowReview] = useState(false);
+  const [scannedItems, setScannedItems] = useState<any[]>([]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -46,6 +49,55 @@ export const OCRUpload: React.FC<OCRUploadProps> = ({
     reader.readAsDataURL(file);
   };
 
+  const pollJobStatus = async (jobId: string, token: string) => {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    const POLL_INTERVAL = 2000; // 2 seconds
+    const MAX_ATTEMPTS = 30; // 1 minute timeout
+
+    let attempts = 0;
+
+    const checkStatus = async () => {
+        try {
+            const response = await fetch(`${API_URL}/images/job/${jobId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await response.json();
+            console.log('Poll Response:', data);
+
+            if (data.status === 'completed') {
+                console.log('✅ Polling Completed. Result:', data.result);
+                if (data.result && data.result.data) {
+                     setProcessing(false);
+                     setScannedItems(data.result.data);
+                     setShowReview(true);
+                     return;
+                } else {
+                     console.error('❌ Missing data in completed result:', data);
+                     // Fallback to empty array to allow modal to open
+                     setProcessing(false);
+                     setScannedItems([]);
+                     setShowReview(true);
+                     return;
+                }
+            } else if (data.status === 'failed') {
+                throw new Error(data.error || 'Job failed');
+            } else {
+                if (attempts < MAX_ATTEMPTS) {
+                    attempts++;
+                    setTimeout(checkStatus, POLL_INTERVAL);
+                } else {
+                    throw new Error('Processing timeout');
+                }
+            }
+        } catch (err: any) {
+            setError(err.message || 'Polling failed');
+            setProcessing(false);
+        }
+    };
+
+    checkStatus();
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
@@ -60,10 +112,6 @@ export const OCRUpload: React.FC<OCRUploadProps> = ({
         import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
       const token = await getToken();
-
-      setUploadComplete(true);
-      setUploading(false);
-      setProcessing(true);
 
       const response = await fetch(
         `${API_URL}/inventories/${inventoryId}/items/from-image`,
@@ -82,12 +130,16 @@ export const OCRUpload: React.FC<OCRUploadProps> = ({
       }
 
       const result = await response.json();
-      setProcessing(false);
-      setExtractedItems(result.addedItems || []);
+      setUploading(false);
+      setProcessing(true); // Start processing UI
+      
+      // Start polling with the returned Job ID
+      if (result.data && result.data.jobId) {
+          pollJobStatus(result.data.jobId, token || '');
+      } else {
+          throw new Error('No Job ID returned from server');
+      }
 
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
     } catch (err: any) {
       console.error('Upload error:', err);
       setError(err.message || 'Failed to upload image');
@@ -100,9 +152,22 @@ export const OCRUpload: React.FC<OCRUploadProps> = ({
     setSelectedFile(null);
     setPreview(null);
     setError(null);
-    setUploadComplete(false);
-    setExtractedItems([]);
   };
+
+  // If Review Modal is active, show it instead
+  if (showReview) {
+      return (
+          <ReviewScanModal 
+              initialItems={scannedItems}
+              inventoryId={inventoryId}
+              onClose={onClose}
+              onSuccess={() => {
+                  onSuccess(); // Refresh parent
+                  onClose(); // Close all
+              }}
+          />
+      );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -172,27 +237,9 @@ export const OCRUpload: React.FC<OCRUploadProps> = ({
             <div className="flex items-center gap-2">
               <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
               <p className="text-blue-700">
-                {uploading ? 'Uploading image...' : 'Processing with OCR...'}
+                {uploading ? 'Uploading image...' : 'AI is reading your receipt...'}
               </p>
             </div>
-          </div>
-        )}
-
-        {extractedItems.length > 0 && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="w-5 h-5 text-green-500" />
-              <p className="text-green-700 font-semibold">
-                Items Added Successfully!
-              </p>
-            </div>
-            <ul className="text-sm text-green-600">
-              {extractedItems.map((item, index) => (
-                <li key={index}>
-                  {item.customName || item.name} - {item.quantity} {item.unit}
-                </li>
-              ))}
-            </ul>
           </div>
         )}
 
@@ -217,7 +264,7 @@ export const OCRUpload: React.FC<OCRUploadProps> = ({
               ? 'Uploading...'
               : processing
               ? 'Processing...'
-              : 'Upload & Extract'}
+              : 'Scan Receipt'}
           </button>
         </div>
       </div>

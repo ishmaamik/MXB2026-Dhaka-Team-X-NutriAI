@@ -30,7 +30,7 @@ model User {
   mealPlans           MealPlan[]
   aiInsights          AiInsight[]
   consumptionPatterns ConsumptionPattern[]
-  foodSafetyAlerts    FoodSafetyAlert[] @relation("UserFoodSafetyAlerts")
+  auditLogs           AuditLog[]
 }
 
 model UserProfile {
@@ -60,6 +60,10 @@ model FoodItem {
   sampleCostPerUnit     Float?
   description           String?
   createdById           String?
+  nutritionPerUnit      Json?    // e.g. { calories: 100, protein: 20... }
+  nutritionUnit         String?  // e.g. "g", "ml", "piece"
+  nutritionBasis        Float?   // e.g. 100 (for 100g)
+  basePrice             Float?   // Price corresponding to nutritionBasis quantity
   createdAt             DateTime         @default(now())
   updatedAt             DateTime         @updatedAt
   isDeleted             Boolean          @default(false)
@@ -68,6 +72,7 @@ model FoodItem {
   files                 File[]           @relation("FoodItemFiles")
   createdBy             User?            @relation("CreatedFoodItems", fields: [createdById], references: [id])
   inventoryItems        InventoryItem[]
+  foodSafetyAlerts      FoodSafetyAlert[] @relation("FoodItemAlerts")
 }
 
 model Inventory {
@@ -130,20 +135,28 @@ model InventoryItem {
 
 model ConsumptionLog {
   id              String           @id @default(uuid())
-  inventoryId     String
+  inventoryId     String?
   inventoryItemId String?
   consumedById    String?
   foodItemId      String?
   itemName        String
   quantity        Float
   unit            String?
+  calories        Float?
+  protein         Float?
+  carbohydrates   Float?
+  fat             Float?
+  fiber           Float?
+  sugar           Float?
+  sodium          Float?
+  cost            Float?   // Total cost of this consumption
   consumedAt      DateTime         @default(now())
   notes           String?
   isDeleted       Boolean          @default(false)
   deletedAt       DateTime?
   consumedBy      InventoryMember? @relation("MemberConsumptions", fields: [consumedById], references: [id])
   foodItem        FoodItem?        @relation("FoodItemConsumptions", fields: [foodItemId], references: [id])
-  inventory       Inventory        @relation("InventoryConsumptions", fields: [inventoryId], references: [id])
+  inventory       Inventory?       @relation("InventoryConsumptions", fields: [inventoryId], references: [id])
   inventoryItem   InventoryItem?   @relation("InventoryItemConsumptions", fields: [inventoryItemId], references: [id])
 }
 
@@ -339,44 +352,25 @@ model SharingLog {
   claimer       User?       @relation("UserSharingLogs", fields: [claimerId], references: [id])
 }
 
-model WeatherData {
-  id          String   @id @default(uuid())
-  location    String   // e.g., "Dhaka", "Chittagong"
-  latitude    Float
-  longitude   Float
-  temperature Float    // Celsius
-  humidity    Float    // Percentage
-  weatherCode Int      // WMO weather code
-  fetchedAt   DateTime @default(now())
-  expiresAt   DateTime // Cache expiration
-  
-  @@index([location])
-  @@index([expiresAt])
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String   // e.g. "CONSUMPTION", "LOGIN", "ITEM_ADDED"
+  details   Json
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model FoodSafetyAlert {
-  id              String        @id @default(uuid())
-  userId          String
-  user            User          @relation("UserFoodSafetyAlerts", fields: [userId], references: [id])
-  inventoryItemId String
-  inventoryItem   InventoryItem @relation("InventoryItemAlerts", fields: [inventoryItemId], references: [id])
-  severity        String        // INFO, WARNING, URGENT, CRITICAL
-  alertType       String        // EXPIRING_SOON, WEATHER_RISK, etc.
-  message         String        @db.Text
-  recommendation  String?       @db.Text
-  actionRequired  String?       // COOK_TODAY, REFRIGERATE, etc.
-  riskScore       Int           // 0-100
-  weatherTemp     Float?
-  weatherHumidity Float?
-  weatherLocation String?
-  isDismissed     Boolean       @default(false)
-  dismissedAt     DateTime?
-  createdAt       DateTime      @default(now())
-  expiresAt       DateTime?
-  
-  @@index([userId])
-  @@index([inventoryItemId])
-  @@index([isDismissed])
-  @@index([createdAt])
+  id              String         @id @default(uuid())
+  foodItemId      String?
+  inventoryItemId String?
+  alertType       String         // "RECALL", "EXPIRED", "CONTAMINATION"
+  severity        String         // "HIGH", "MEDIUM", "LOW"
+  message         String
+  createdAt       DateTime       @default(now())
+  isResolved      Boolean        @default(false)
+  resolvedAt      DateTime?
+  foodItem        FoodItem?      @relation("FoodItemAlerts", fields: [foodItemId], references: [id])
+  inventoryItem   InventoryItem? @relation("InventoryItemAlerts", fields: [inventoryItemId], references: [id])
 }
-

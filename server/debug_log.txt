@@ -1,0 +1,245 @@
+🔍 Inspecting Failed BullMQ Jobs...
+
+Queue: Audit Queue
+❌ 4 failed jobs found.
+
+--- Job ID: 4 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "action": "CONSUMPTION_LOGGED",
+  "details": {
+    "consumptionId": "e8709690-8e7b-4ced-a78e-1334e37eecdd",
+    "itemName": "Eggs",
+    "quantity": 1,
+    "inventoryId": "ceca3fdc-0734-4b23-93ae-97d2bb83e61d"
+  }
+}
+Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.auditWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\audit-worker.ts:19:24)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26
+
+--- Job ID: 3 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "action": "CONSUMPTION_LOGGED",
+  "details": {
+    "consumptionId": "9f5c7eae-41af-44b0-87d9-21c0705e962f",
+    "itemName": "Chicken Breast",
+    "quantity": 1,
+    "inventoryId": "ceca3fdc-0734-4b23-93ae-97d2bb83e61d"
+  }
+}
+Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.auditWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\audit-worker.ts:19:24)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26
+
+--- Job ID: 2 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "action": "CONSUMPTION_LOGGED",
+  "details": {
+    "consumptionId": "a6ce7325-4dbe-42fd-853d-253bc3994150",
+    "itemName": "Potatoes Brushed",
+    "quantity": 1,
+    "inventoryId": "6d3ab9d7-bad5-435b-9820-8f7c03992a80"
+  }
+}
+Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.auditWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\audit-worker.ts:19:24)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26
+
+--- Job ID: 1 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "action": "CONSUMPTION_LOGGED",
+  "details": {
+    "consumptionId": "a5ba6763-909a-4201-817b-eefc99ca38b2",
+    "itemName": "Bread",
+    "quantity": 1,
+    "inventoryId": "53f465fa-455b-446f-9f75-d2a1badf791a"
+  }
+}
+Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.auditWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\audit-worker.ts:19:24)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26
+
+Queue: Image Queue
+❌ 3 failed jobs found.
+
+--- Job ID: 3 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "file": {
+    "id": "dbbb37e6-5d31-4074-96bd-f102e5c2b325",
+    "userId": "b5378684-a574-4b56-8547-5d022fc990a7",
+    "url": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766784050/nutritrack-receipts/rsmjtuv6wkpa2m64tstk.jpg",
+    "filename": "veggie-grocery-receipt_orig.jpeg",
+    "mimeType": "image/jpeg",
+    "size": 39724,
+    "foodItemId": null,
+    "inventoryId": "ceca3fdc-0734-4b23-93ae-97d2bb83e61d",
+    "inventoryItemId": null,
+    "createdAt": "2025-12-26T21:20:52.353Z",
+    "isDeleted": false,
+    "deletedAt": null
+  },
+  "metadata": {
+    "inventoryId": "ceca3fdc-0734-4b23-93ae-97d2bb83e61d",
+    "imageUrl": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766784050/nutritrack-receipts/rsmjtuv6wkpa2m64tstk.jpg",
+    "extractItems": true
+  },
+  "type": "process-ocr"
+}
+Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.imageWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\image-worker.ts:79:14)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26
+
+--- Job ID: 2 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "file": {
+    "id": "4ed4c594-e199-471f-949f-f87bd0d0f9ef",
+    "userId": "b5378684-a574-4b56-8547-5d022fc990a7",
+    "url": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766783571/nutritrack-receipts/tri9swiswwkeuhwnufcz.jpg",
+    "filename": "veggie-grocery-receipt_orig.jpeg",
+    "mimeType": "image/jpeg",
+    "size": 39724,
+    "foodItemId": null,
+    "inventoryId": "6d3ab9d7-bad5-435b-9820-8f7c03992a80",
+    "inventoryItemId": null,
+    "createdAt": "2025-12-26T21:12:54.401Z",
+    "isDeleted": false,
+    "deletedAt": null
+  },
+  "metadata": {
+    "inventoryId": "6d3ab9d7-bad5-435b-9820-8f7c03992a80",
+    "imageUrl": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766783571/nutritrack-receipts/tri9swiswwkeuhwnufcz.jpg",
+    "extractItems": true
+  },
+  "type": "process-ocr"
+}
+Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.imageWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\image-worker.ts:79:14)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26
+
+--- Job ID: 1 ---
+Data: {
+  "userId": "user_35l9L2Kc7P0vY0IRe7p9e2O4crC",
+  "file": {
+    "id": "51f42a33-39bc-4c2b-95ea-ee74f9d00705",
+    "userId": "b5378684-a574-4b56-8547-5d022fc990a7",
+    "url": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766783494/nutritrack-receipts/z1bfqlml6iugvqvpgleg.jpg",
+    "filename": "veggie-grocery-receipt_orig.jpeg",
+    "mimeType": "image/jpeg",
+    "size": 39724,
+    "foodItemId": null,
+    "inventoryId": "53f465fa-455b-446f-9f75-d2a1badf791a",
+    "inventoryItemId": null,
+    "createdAt": "2025-12-26T21:11:36.577Z",
+    "isDeleted": false,
+    "deletedAt": null
+  },
+  "metadata": {
+    "inventoryId": "53f465fa-455b-446f-9f75-d2a1badf791a",
+    "imageUrl": "https://res.cloudinary.com/dhmtoyti6/image/upload/v1766783494/nutritrack-receipts/z1bfqlml6iugvqvpgleg.jpg",
+    "extractItems": true
+  },
+  "type": "process-ocr"
+}
+Reason: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+Stack: PrismaClientKnownRequestError: 
+Invalid `prisma.auditLog.create()` invocation:
+
+
+Foreign key constraint violated on the constraint: `AuditLog_userId_fkey`
+    at ei.handleRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at ei.handleAndLogRequestError (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at ei.request (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at async a (E:\a\bubt_hackathon\server\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:833:24)
+    at async Worker.exports.imageWorker.bullmq_1.Worker.connection [as processFn] (E:\a\bubt_hackathon\server\src\workers\image-worker.ts:79:14)
+    at async E:\a\bubt_hackathon\server\node_modules\bullmq\src\classes\worker.ts:990:26
+
+Queue: AI Queue
+✅ No failed jobs.

@@ -15,6 +15,9 @@ router.post('/', fileUploadMiddleware, imageController.uploadImage);
 // Get user images
 router.get('/', imageController.getUserImages);
 
+// Get job status
+router.get('/job/:jobId', imageController.getJobStatus);
+
 // Delete image
 router.delete('/:fileId', imageController.deleteImage);
 

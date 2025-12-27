@@ -42,18 +42,21 @@ export class OCRService {
                 1. "text" - the raw text you can see in the image
                 2. "items" - an array of food items found, each with:
                    - "name": the item name
-                   - "quantity": numerical amount if visible (default 1)
-                   - "unit": unit of measurement if visible (default "pcs")
+                   - "quantity": numerical amount (INTEGER PREFERRED, e.g.1,2, 100, 200. )
+                   - "unit": unit of measurement (PREFER "pcs", "pack", "can", "bottle". Only use "kg"/"g" for bulk items)
+                
+                RULES:
+                - If you see 6 nuggets, return Quantity: 6, Unit: "pcs". (NOT 100g)
+                - If you see a bottle of ketchup, return Quantity: 1, Unit: "bottle".
+                - If you see a bag of chips, return Quantity: 1, Unit: "pack".
+                - ONLY use weight (g/kg) if the item is explicitly weighed (e.g. raw meat, vegetables by kg).
                 
                 Focus on:
+                - Discrete item counts (1 apple, 2 cans, 1 box)
                 - Food products and their names
-                - Quantities, weights, or counts if visible
-                - Ingredients lists
-                - Recipe items
                 - Grocery receipts
-                - Food packaging text
                 
-                Return only valid JSON, no markdown formatting.`,
+                Return only valid JSON.`,
               },
               {
                 type: 'image_url',
@@ -64,7 +67,7 @@ export class OCRService {
             ],
           },
         ],
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
         response_format: { type: 'json_object' },
         temperature: 0.1,
         max_completion_tokens: 1024,
@@ -92,7 +95,7 @@ export class OCRService {
       const extractedItems: ExtractedItem[] = (extractedData.items || [])
         .map((item: any) => ({
           name: this.cleanItemName(item.name || ''),
-          quantity: typeof item.quantity === 'number' ? item.quantity : 1,
+          quantity: Math.max(1, Math.round(Number(item.quantity) || 1)), // Force integer
           unit: item.unit || 'pcs',
           confidence: 0.95, // Groq Vision has high confidence
         }))
@@ -199,12 +202,15 @@ export class OCRService {
         if (itemName && itemName.length > 1) {
           items.push({
             name: this.cleanItemName(itemName),
-            quantity: quantityMatch ? parseFloat(quantityMatch[1]) : 1,
+            quantity: quantityMatch
+              ? Math.max(1, Math.round(parseFloat(quantityMatch[1]))) // Force integer
+              : 1,
             unit: quantityMatch ? quantityMatch[2] : 'pcs',
           });
         }
       }
     }
+
 
     return items.slice(0, 20); // Limit to prevent overwhelming
   }
