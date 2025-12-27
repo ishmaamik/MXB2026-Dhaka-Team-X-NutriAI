@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UploadedFile } from 'express-fileupload';
 import { imageService } from './image-service';
+import { imageQueue } from '../../config/queue';
 
 export class ImageController {
   async uploadImage(req: Request, res: Response) {
@@ -79,6 +80,56 @@ export class ImageController {
       res.status(500).json({
         success: false,
         error: error.message || 'Failed to get images',
+      });
+    }
+  }
+  async getJobStatus(req: Request, res: Response) {
+    try {
+      const userId = req.auth?.userId;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { jobId } = req.params;
+      if (!jobId) {
+        return res.status(400).json({ error: 'Job ID is required' });
+      }
+
+      const job = await imageQueue.getJob(jobId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Check if job belongs to user (security check)
+      if (job.data.userId !== userId) {
+        return res.status(403).json({ error: 'Unauthorized access to job' });
+      }
+
+      const state = await job.getState();
+      const result = job.returnvalue;
+
+      // Ensure data array exists for frontend compatibility
+      let safeResult = result;
+      if (state === 'completed' && result && !result.data) {
+          safeResult = { ...result, data: [] };
+      }
+
+      const responseData = {
+        success: true,
+        jobId,
+        status: state,
+        inventoryId: job.data?.metadata?.inventoryId, // Return inventoryId
+        result: state === 'completed' ? safeResult : null,
+        error: state === 'failed' ? job.failedReason : null,
+      };
+
+      console.log('Sending Job Status Response:', JSON.stringify(responseData));
+      res.json(responseData);
+    } catch (error: any) {
+      console.error('Job status error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to get job status',
       });
     }
   }

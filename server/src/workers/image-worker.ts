@@ -9,7 +9,7 @@ const inventoryService = new InventoryService();
 export const imageWorker = new Worker(
   'image-queue',
   async (job) => {
-    console.log(`🖼️ [Image Worker] Processing job ${job.id}:`, job.name);
+    console.log(`🖼️ [Image Worker v2] Processing job ${job.id}:`, job.name);
 
     try {
       const { userId: clerkId, file, metadata, type } = job.data;
@@ -63,45 +63,32 @@ export const imageWorker = new Worker(
          if (result && result.extractedItems) {
              console.log(`✅ [Image Worker] Extracted ${result.extractedItems.length} items from OCR`);
              
-             // Auto-add items to inventory
-             const addedItems = [];
-             for (const item of result.extractedItems) {
-                 try {
-                     const newItem = await inventoryService.addInventoryItem(
-                         clerkId, // Service expects Clerk ID
-                         metadata.inventoryId,
-                         {
-                             customName: item.name,
-                             quantity: item.quantity || 1,
-                             unit: item.unit || 'pcs',
-                             notes: `Auto-added from Background OCR (${Math.round((item.confidence || 0) * 100)}%)`
-                         }
-                     );
-                     addedItems.push(newItem);
-                 } catch (err) {
-                     console.error('Failed to add OCR item:', item.name, err);
-                 }
-             }
+             // WE do NOT auto-add items anymore. We return them for user review.
+             // This is part of the interactive flow refactor.
              
-             // Optional: Notify user (via socket/push) that "X items were added"
-             // await notificationService.notify(userId, ` processed! Added ${addedItems.length} items.`);
-             
-             // Log to Audit
+             // Log to Audit that we PROCESSED the OCR, but didn't Add
              await prisma.auditLog.create({
                  data: {
                      userId,
                      action: 'OCR_PROCESSED',
                      details: {
                          jobId: job.id,
-                         itemsAdded: addedItems.length,
+                         itemsFound: result.extractedItems.length,
                          inventoryId: metadata.inventoryId
                      }
                  }
              });
+
+             // Return the items as the job result
+             return {
+               success: true,
+               data: result.extractedItems
+             };
          }
       }
 
-      return { success: true };
+      console.log('⚠️ [Image Worker] No items extracted or not an OCR job');
+      return { success: true, data: [] }; // Always return data array
     } catch (error) {
       console.error(`❌ [Image Worker] Job ${job.id} failed:`, error);
       throw error;

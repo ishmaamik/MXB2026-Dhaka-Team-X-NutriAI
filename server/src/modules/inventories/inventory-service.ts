@@ -1,4 +1,5 @@
 import prisma from '../../config/database';
+import { aiAnalyticsService } from '../../services/aiAnalyticsService';
 import {
   ConsumptionLogRequest,
   InventoryItemFilters,
@@ -221,24 +222,97 @@ export class InventoryService {
         throw new Error('Food item not found');
       }
     } else if (data.customName) {
-      // If no foodItemId but customName provided, try to find matching food item
-      const matchingFoodItem = await prisma.foodItem.findFirst({
+      // 1. First, try to find a PRIVATE food item created by THIS user
+      let matchingFoodItem = await prisma.foodItem.findFirst({
         where: {
           name: {
             equals: data.customName.trim(),
             mode: 'insensitive',
           },
+          createdById: user.id, // Scoped to user
           isDeleted: false,
         },
       });
 
-      if (matchingFoodItem) {
-        // Found matching food item, use it instead of creating custom item
-        finalFoodItemId = matchingFoodItem.id;
-        finalCustomName = matchingFoodItem.name; // Use the exact name from DB
-        finalUnit = data.unit || matchingFoodItem.unit || undefined; // Prefer provided unit, fallback to food item unit
+      // 2. If NO private item found, and we have custom data (nutrition/price), FORCE CREATE NEW PRIVATE ITEM
+      // This ensures we don't accidentally link to a generic item when the user has specific OCR data.
+      if (!matchingFoodItem) {
+          try {
+             let itemData = {
+                nutritionPerUnit: data.nutritionPerUnit,
+                nutritionUnit: data.nutritionUnit || data.unit,
+                nutritionBasis: data.nutritionBasis || (['g', 'ml'].includes(data.unit || '') ? 100 : 1),
+                basePrice: data.basePrice,
+                category: 'Uncategorized'
+             };
+
+             // If price is missing, try to estimate it using AI
+             if (!itemData.basePrice) {
+                 console.log(`🤖 Estimating details for new item: ${data.customName}`);
+                 try {
+                    const estimated = await aiAnalyticsService.estimateItemDetails(data.customName!);
+                    if (estimated && estimated.basePrice) {
+                        console.log(`✅ AI Estimated price: ${estimated.basePrice}`);
+                        itemData.basePrice = estimated.basePrice;
+                        if (estimated.category) itemData.category = estimated.category;
+
+                        // Also fill nutrition if missing
+                        if (!itemData.nutritionPerUnit) {
+                             itemData.nutritionPerUnit = estimated.nutritionPerUnit;
+                             itemData.nutritionUnit = estimated.nutritionUnit;
+                             itemData.nutritionBasis = estimated.nutritionBasis;
+                        }
+                    }
+                 } catch (e) {
+                     console.warn('Failed to estimate item details:', e);
+                 }
+             }
+
+            // Only create if we have at least some data (price or nutrition), otherwise fall through to global search
+            if (itemData.basePrice || itemData.nutritionPerUnit) {
+                const newFoodItem = await prisma.foodItem.create({
+                    data: {
+                        name: data.customName?.trim() || 'Unknown Item',
+                        category: itemData.category,
+                        unit: data.unit,
+                        nutritionPerUnit: itemData.nutritionPerUnit || {},
+                        nutritionUnit: itemData.nutritionUnit,
+                        nutritionBasis: itemData.nutritionBasis,
+                        basePrice: itemData.basePrice,
+                        createdById: user.id
+                    }
+                });
+                console.log('Creates new PRIVATE FoodItem from OCR:', newFoodItem.name);
+                matchingFoodItem = newFoodItem;
+            }
+         } catch (err) {
+             console.error('Failed to create Private FoodItem:', err);
+         }
       }
-      // If no matching food item found, keep as custom item (finalFoodItemId remains null)
+
+
+      // 3. If STILL no item found (meaning no private existing, and no custom data provided),
+      // Try to find a GLOBAL food item (createdById: null)
+      if (!matchingFoodItem) {
+          matchingFoodItem = await prisma.foodItem.findFirst({
+            where: {
+              name: {
+                equals: data.customName.trim(),
+                mode: 'insensitive',
+              },
+              createdById: null, // Global item
+              isDeleted: false,
+            },
+          });
+      }
+
+      // Final Assignment
+      if (matchingFoodItem) {
+        finalFoodItemId = matchingFoodItem.id;
+        finalCustomName = matchingFoodItem.name;
+        finalUnit = data.unit || matchingFoodItem.unit || undefined;
+      } 
+      // If still no match, finalFoodItemId remains null -> it's a raw custom inventory item.
     }
 
     return await prisma.inventoryItem.create({
@@ -889,8 +963,30 @@ export class InventoryService {
       string,
       { category: string; consumptionCount: number; quantityConsumed: number }
     > = {};
+    const byTime: Record<
+      string,
+      { timePeriod: string; consumptionCount: number }
+    > = {};
+    const dailyNutrition: Record<
+      string,
+      {
+        date: string;
+        calories: number;
+        protein: number;
+        carbohydrates: number;
+        fat: number;
+        fiber: number;
+        sugar: number;
+        sodium: number;
+      }
+    > = {};
+    const dailyCost: Record<string, { date: string; cost: number }> = {};
+
     for (const log of consumptionLogs) {
       const category = log.foodItem?.category || 'Uncategorized';
+      const dateKey = log.consumedAt.toISOString().split('T')[0];
+
+      // 1. Category Aggregation
       if (!byCategory[category]) {
         byCategory[category] = {
           category,
@@ -900,15 +996,8 @@ export class InventoryService {
       }
       byCategory[category].consumptionCount += 1;
       byCategory[category].quantityConsumed += log.quantity;
-    }
 
-    // Group by time period (daily)
-    const byTime: Record<
-      string,
-      { timePeriod: string; consumptionCount: number }
-    > = {};
-    for (const log of consumptionLogs) {
-      const dateKey = log.consumedAt.toISOString().split('T')[0];
+      // 2. Time Aggregation (Count)
       if (!byTime[dateKey]) {
         byTime[dateKey] = {
           timePeriod: dateKey,
@@ -916,19 +1005,58 @@ export class InventoryService {
         };
       }
       byTime[dateKey].consumptionCount += 1;
-    }
 
-    // Calculate waste reduction (simplified for now)
-    const wastePrevented = consumptionLogs.length * 0.5; // Placeholder calculation
-    const wasteReductionPercentage = 15; // Placeholder
+      // 3. Daily Nutrition Aggregation
+      if (!dailyNutrition[dateKey]) {
+        dailyNutrition[dateKey] = {
+          date: dateKey,
+          calories: 0,
+          protein: 0,
+          carbohydrates: 0,
+          fat: 0,
+          fiber: 0,
+          sugar: 0,
+          sodium: 0,
+        };
+      }
+      // Cast to any to access potentially missing types if generation hasn't run
+      const l = log as any;
+      dailyNutrition[dateKey].calories += l.calories || 0;
+      dailyNutrition[dateKey].protein += l.protein || 0;
+      dailyNutrition[dateKey].carbohydrates += l.carbohydrates || 0;
+      dailyNutrition[dateKey].fat += l.fat || 0;
+      dailyNutrition[dateKey].fiber += l.fiber || 0;
+      dailyNutrition[dateKey].sugar += l.sugar || 0;
+      dailyNutrition[dateKey].sodium += l.sodium || 0;
+
+      // 4. Daily Cost Aggregation
+      if (!dailyCost[dateKey]) {
+        dailyCost[dateKey] = { date: dateKey, cost: 0 };
+      }
+      
+      const pricePerUnit = log.foodItem && (log.foodItem as any).basePrice ? (log.foodItem as any).basePrice : 0;
+      
+      let cost = 0;
+      if (pricePerUnit > 0) {
+           const basis = (log.foodItem as any).nutritionBasis || 1;
+           const ratio = log.quantity / basis;
+           cost = pricePerUnit * ratio;
+      }
+      
+      dailyCost[dateKey].cost += cost;
+    }
 
     return {
       byCategory: Object.values(byCategory),
       byTime: Object.values(byTime),
+      dailyNutrition: Object.values(dailyNutrition).sort((a, b) => a.date.localeCompare(b.date)),
+      dailyCost: Object.values(dailyCost).sort((a, b) => a.date.localeCompare(b.date)),
       wasteReduction: {
-        wastePrevented,
-        wasteReductionPercentage,
+        wastePrevented: consumptionLogs.length * 0.5,
+        wasteReductionPercentage: 15,
       },
     };
   }
 }
+
+export const inventoryService = new InventoryService();

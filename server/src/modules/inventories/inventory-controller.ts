@@ -166,6 +166,10 @@ export class InventoryController {
         unit,
         expiryDate,
         notes,
+        nutritionPerUnit,
+        nutritionUnit,
+        nutritionBasis,
+        basePrice,
       }: InventoryItemRequest = req.body;
 
       if (!userId) {
@@ -203,7 +207,12 @@ export class InventoryController {
           quantity,
           unit,
           expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+
           notes,
+          nutritionPerUnit,
+          nutritionUnit,
+          nutritionBasis,
+          basePrice,
         },
       );
 

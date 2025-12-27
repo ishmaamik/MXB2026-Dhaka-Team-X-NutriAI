@@ -1,5 +1,7 @@
 import Groq from 'groq-sdk';
 import prisma from '../config/database';
+import { inventoryService } from '../modules/inventories/inventory-service';
+
 
 class AIAnalyticsService {
   private groqClient: Groq;
@@ -125,7 +127,7 @@ class AIAnalyticsService {
         },
       });
 
-      // Analyze patterns
+      // Analyze patterns (Legacy Logic for Time of Day & Category)
       const categoryBreakdown: Record<string, number> = {};
       const timePatterns: Record<string, number> = {};
 
@@ -150,6 +152,13 @@ class AIAnalyticsService {
       ).size;
       const consistencyScore = Math.round((daysCovered / daysAgo) * 100);
 
+      // Fetch new Analytics Data (Daily Nutrition & Cost)
+      const analyticsData = await inventoryService.getConsumptionPatterns(
+        data.userId,
+        startDate,
+        new Date(),
+      );
+
       const patterns = {
         totalItems: consumptionLogs.length,
         categoryBreakdown,
@@ -159,7 +168,11 @@ class AIAnalyticsService {
           .sort(([, a], [, b]) => b - a)
           .slice(0, 3)
           .map(([category]) => category),
+        // Add new fields
+        dailyNutrition: analyticsData.dailyNutrition,
+        dailyCost: analyticsData.dailyCost
       };
+
 
       return JSON.stringify({
         success: true,
@@ -565,7 +578,14 @@ class AIAnalyticsService {
         messages: [
           {
             role: 'system',
-            content: `You are a food waste management expert. Analyze the following consumption data and provide insights, recommendations, and encouragement to the user. Be specific about trends, achievements, and areas for improvement.`,
+            content: `You are a personalized nutrition and financial advisor. Analyze the user's consumption data with a STRONG focus on:
+            1. Nutritional Quality: Macronutrient balance, calorie intake trends, and health implications.
+            2. Financial Impact: Spending trends, cost-per-meal efficiency, and food budget optimization.
+            
+            Do NOT focus heavily on "variety of categories" or "diversity score" unless it directly impacts nutrition.
+            
+            Provide specific, actionable advice to help the user save money and eat healthier.
+            Be encouraging but data-driven.`,
           },
           {
             role: 'user',
@@ -779,6 +799,7 @@ class AIAnalyticsService {
             3. If Count: Standardize to 1 PIECE/UNIT. Set nutritionBasis = 1. Set nutritionUnit = 'piece'.
             4. Estimate the "basePrice" in BDT (Bangladeshi Taka) for that specific nutritionBasis amount (e.g. Price for 100g, or Price for 1 piece).
             5. Provide nutrition values for that specific nutritionBasis.
+            6. Assign a high-level "category" (e.g. Vegetables, Fruits, Meat, Dairy, Grains, Snacks, Beverages, Spices, Other).
 
             Return JSON ONLY:
             {
@@ -793,7 +814,8 @@ class AIAnalyticsService {
               },
               "nutritionUnit": string, // 'g', 'ml', 'piece'
               "nutritionBasis": number, // 100 or 1
-              "basePrice": number // Price in BDT for the basis amount
+              "basePrice": number, // Price in BDT for the basis amount
+              "category": string // One of: "Vegetables", "Fruits", "Meat", "Dairy", "Grains", "Snacks", "Beverages", "Spices", "Other"
             }
             Do not include any explanation or markdown formatting.`,
           },
