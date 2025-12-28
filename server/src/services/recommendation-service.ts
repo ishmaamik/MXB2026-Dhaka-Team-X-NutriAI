@@ -1,6 +1,7 @@
 import { userAnalyticsService } from './user-analytics-service';
 import { newsAPIService, Article } from './news-api-service';
 import { youtubeAPIService, Video } from './youtube-api-service';
+import { foodistaService } from './foodista-service';
 
 interface PersonalizedRecommendations {
     articles: Article[];
@@ -43,13 +44,15 @@ export class RecommendationService {
             const keywords = await userAnalyticsService.generateRecommendationKeywords(userId);
 
             // Fetch articles and videos in parallel
-            const [articles, videos] = await Promise.all([
+            const [newsArticles, foodistaArticles, videos] = await Promise.all([
                 this.fetchArticles(keywords, analytics.primaryConcerns),
+                this.fetchFoodistaArticles(keywords),
                 this.fetchVideos(keywords, analytics.primaryConcerns),
             ]);
 
-            // Score and sort recommendations
-            const scoredArticles = this.scoreAndSortArticles(articles, analytics.primaryConcerns);
+            // Combine and score articles
+            const allArticles = [...newsArticles, ...foodistaArticles];
+            const scoredArticles = this.scoreAndSortArticles(allArticles, analytics.primaryConcerns);
             const scoredVideos = this.scoreAndSortVideos(videos, analytics.primaryConcerns);
 
             const recommendations: PersonalizedRecommendations = {
@@ -106,6 +109,14 @@ export class RecommendationService {
                 allArticles.push(...dietaryArticles);
             }
 
+            // 4. Regional / Category Specific (Fetching 3)
+            if (keywords.categorySpecific.length > 0) {
+                // Prioritize regional keywords if present
+                const regionalAmount = 3;
+                const regionalArticles = await newsAPIService.searchArticles(keywords.categorySpecific.slice(0, 3), regionalAmount);
+                allArticles.push(...regionalArticles);
+            }
+
             // 4. Fill with General/Secondary if needed
             if (allArticles.length < 10 && keywords.secondary.length > 0) {
                 const generalArticles = await newsAPIService.searchArticles(keywords.secondary, 4);
@@ -149,7 +160,13 @@ export class RecommendationService {
                 allVideos.push(...dietaryVideos);
             }
 
-            // 4. Fill with General if needed
+            // 4. Category Specific / Regional (Fetch 3)
+            if (keywords.categorySpecific.length > 0) {
+                const categoryVideos = await youtubeAPIService.searchVideos(keywords.categorySpecific.slice(0, 2), 3);
+                allVideos.push(...categoryVideos);
+            }
+
+            // 5. Fill with General if needed
             if (allVideos.length < 8 && keywords.secondary.length > 0) {
                 const generalVideos = await youtubeAPIService.searchVideos(keywords.secondary, 3);
                 allVideos.push(...generalVideos);
@@ -160,6 +177,81 @@ export class RecommendationService {
 
         // Remove duplicates
         return this.removeDuplicateVideos(allVideos);
+    }
+
+    /**
+     * Fetch and transform Foodista posts, scoring against keywords
+     */
+    private async fetchFoodistaArticles(
+        keywords: { primary: string[]; secondary: string[]; dietary: string[]; categorySpecific: string[]; consumptionBased: string[] }
+    ): Promise<Article[]> {
+        try {
+            const posts = await foodistaService.getLatestPosts();
+
+            return posts.map((post, index): Article => {
+                let reason = 'Foodista Blog';
+                let score = 0;
+
+                // Check if post matches any consumption keywords
+                const content = `${post.title} ${post.description}`.toLowerCase();
+
+                for (const keyword of keywords.consumptionBased) {
+                    if (content.includes(keyword.toLowerCase())) {
+                        reason = 'Based on your consumption';
+                        score += 10;
+                        break;
+                    }
+                    // Partial match (individual words)
+                    const words = keyword.toLowerCase().split(' ');
+                    if (words.some(w => w.length > 3 && content.includes(w))) {
+                        reason = 'Related to your diet';
+                        score += 3;
+                    }
+                }
+
+                // If no consumption match, check primary keywords (now includes regional)
+                if (score === 0) {
+                    for (const keyword of keywords.primary) {
+                        if (content.includes(keyword.toLowerCase())) {
+                            // Special check for regional
+                            if (keyword.includes('bangla') || keyword.includes('bengali')) {
+                                reason = 'Regional Specialty';
+                                score += 8;
+                            } else {
+                                reason = 'Recommended for you';
+                                score += 5;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // Check category specific (where regional keywords live)
+                if (score === 0) {
+                    for (const keyword of keywords.categorySpecific) {
+                        if (content.includes(keyword.toLowerCase())) {
+                            reason = 'Local Cuisine';
+                            score += 6;
+                            break;
+                        }
+                    }
+                }
+
+                return {
+                    id: `foodista-${index}-${Date.now()}`,
+                    title: post.title,
+                    description: post.description,
+                    url: post.link,
+                    imageUrl: post.image || null, // Ensure string | null
+                    source: 'Foodista',
+                    publishedAt: post.pubDate,
+                    recommendationReason: reason
+                };
+            });
+        } catch (e) {
+            console.error('Error fetching Foodista articles for recommendations:', e);
+            return [];
+        }
     }
 
     /**

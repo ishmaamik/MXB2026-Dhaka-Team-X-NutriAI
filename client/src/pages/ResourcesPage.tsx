@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
-import { BookOpen, Sparkles, Plus, Newspaper, Video as VideoIcon } from 'lucide-react';
+import { BookOpen, Sparkles, Plus, Newspaper, Video as VideoIcon, Loader2 } from 'lucide-react';
 import { ResourceCard } from '../components/resources/ResourceCard';
 import { ArticleCard } from '../components/resources/ArticleCard';
 import { VideoCard } from '../components/resources/VideoCard';
@@ -11,7 +11,8 @@ import {
   getAllResources,
   getPersonalizedRecommendations,
   searchExternalArticles,
-  searchExternalVideos
+  searchExternalVideos,
+  fetchFoodistaFeed
 } from '../services/resources-service';
 import type { PersonalizedRecommendations, Article, Video } from '../types/resource-types';
 
@@ -116,12 +117,12 @@ export function ResourcesPage() {
 
       {/* Tab Navigation */}
       {isSignedIn && (
-        <div className="flex gap-2 border-b border-gray-200">
+        <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
           <button
             onClick={() => setActiveTab('personalized')}
-            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${activeTab === 'personalized'
-                ? 'border-green-600 text-green-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'personalized'
+              ? 'border-green-600 text-green-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
           >
             <div className="flex items-center gap-2">
@@ -131,9 +132,9 @@ export function ResourcesPage() {
           </button>
           <button
             onClick={() => setActiveTab('library')}
-            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${activeTab === 'library'
-                ? 'border-green-600 text-green-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
+            className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 whitespace-nowrap ${activeTab === 'library'
+              ? 'border-green-600 text-green-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
           >
             <div className="flex items-center gap-2">
@@ -269,8 +270,8 @@ export function ResourcesPage() {
                   <button
                     onClick={() => setResultTab('articles')}
                     className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${resultTab === 'articles'
-                        ? 'border-green-600 text-green-600'
-                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                      ? 'border-green-600 text-green-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
                       }`}
                   >
                     Articles ({searchResults.articles.length})
@@ -278,8 +279,8 @@ export function ResourcesPage() {
                   <button
                     onClick={() => setResultTab('videos')}
                     className={`px-4 py-2 font-medium text-sm transition-colors border-b-2 ${resultTab === 'videos'
-                        ? 'border-green-600 text-green-600'
-                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                      ? 'border-green-600 text-green-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
                       }`}
                   >
                     Videos ({searchResults.videos.length})

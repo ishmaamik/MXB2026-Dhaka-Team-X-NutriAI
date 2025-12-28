@@ -11,9 +11,13 @@ router.get("/tags", resourcesController.getAllResourceTags);
 
 router.get("/personalized", requireAuth(), resourcesController.getPersonalizedRecommendations);
 
-// Search endpoints (no auth required)
-router.get("/search/articles", resourcesController.searchExternalArticles);
-router.get("/search/videos", resourcesController.searchExternalVideos);
+// Search endpoints
+router.get("/search/articles", resourcesController.searchArticles);
+router.get("/search/videos", resourcesController.searchVideos);
+router.get("/feed/foodista", resourcesController.getFoodistaFeed);
+
+// Import endpoint
+router.post('/import', requireAuth(), resourcesController.importResource);
 
 router.get("/:id", resourcesController.getResourceById);
 

@@ -65,6 +65,35 @@ export const createResource = async (token: string, data: any) => {
     return response.data;
 }
 
+export const importResource = async (token: string, url: string) => {
+    const res = await fetch(`${BASE_URL}/resources/import`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ url }),
+    });
+
+    if (!res.ok) {
+        throw new Error('Failed to import resource');
+    }
+
+    const response = await res.json();
+    return response.data;
+}
+
+export const fetchFoodistaFeed = async () => {
+    const res = await fetch(`${BASE_URL}/resources/feed/foodista`);
+
+    if (!res.ok) {
+        throw new Error('Failed to fetch Foodista feed');
+    }
+
+    const data = await res.json();
+    return data.data;
+}
+
 export const updateResource = async (token: string, id: string, data: any) => {
     const res = await fetch(`${BASE_URL}/resources/${id}`, {
         method: 'PUT',

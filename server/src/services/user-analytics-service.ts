@@ -13,6 +13,7 @@ interface UserAnalytics {
     consumptionFrequency: number; // items consumed per week
     spendingTier: 'budget-conscious' | 'moderate' | 'flexible';
     primaryConcerns: string[]; // e.g., ['budget', 'waste-reduction', 'nutrition']
+    location: string | null;
 }
 
 interface RecommendationKeywords {
@@ -77,6 +78,7 @@ export class UserAnalyticsService {
             consumptionFrequency,
             spendingTier,
             primaryConcerns,
+            location: user.profile?.location || null,
         };
     }
 
@@ -417,6 +419,18 @@ export class UserAnalyticsService {
         // NEW: Consumption-based keywords from ALL consumption logs
         const consumptionKeywords = await this.getConsumptionBasedKeywords(userId);
         keywords.consumptionBased.push(...consumptionKeywords);
+
+        // NEW: Regional cuisine keywords based on location
+        if (analytics.location) {
+            const loc = analytics.location.toLowerCase();
+            if (loc.includes('bangladesh') || loc.includes('dhaka') || loc.includes('chittagong')) {
+                keywords.categorySpecific.push('bangladeshi recipes', 'bengali cuisine', 'bangladeshi street food');
+                // Also add to primary to ensure some visibility
+                keywords.primary.push('bangladeshi recipes');
+            } else if (loc.includes('india') || loc.includes('kolkata')) { // Example logic for other regions
+                keywords.categorySpecific.push('indian recipes', 'bengali cuisine');
+            }
+        }
 
         console.log(`🎯 Recommendation keywords for user ${userId}:`);
         console.log(`  Primary (${keywords.primary.length}):`, keywords.primary);

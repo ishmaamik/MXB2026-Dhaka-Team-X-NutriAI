@@ -4,9 +4,12 @@ interface RecommendationBadgeProps {
     reason: string;
 }
 
+
 export function RecommendationBadge({ reason }: RecommendationBadgeProps) {
     const getBadgeConfig = (reason: string) => {
+        if (!reason) return null;
         const reasonLower = reason.toLowerCase();
+
 
         if (reasonLower.includes('budget')) {
             return {
@@ -49,6 +52,9 @@ export function RecommendationBadge({ reason }: RecommendationBadgeProps) {
     };
 
     const config = getBadgeConfig(reason);
+
+    if (!config) return null;
+
     const Icon = config.icon;
 
     return (

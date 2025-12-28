@@ -3,6 +3,8 @@ import { resourcesService } from './resources-service';
 import prisma from '../../config/database';
 import { newsAPIService } from '../../services/news-api-service';
 import { youtubeAPIService } from '../../services/youtube-api-service';
+import { webScraperService } from '../../services/web-scraper-service';
+import { foodistaService } from '../../services/foodista-service';
 
 export const getAllResources = async (req: Request, res: Response) => {
   try {
@@ -242,14 +244,89 @@ export const deleteResource = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Get Foodista RSS Feed
+ */
+export const getFoodistaFeed = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const posts = await foodistaService.getLatestPosts();
+    // Wrap in data object to be consistent with other endpoints and frontend expectations
+    res.status(200).json({ data: posts });
+  } catch (error) {
+    console.error('Error getting Foodista feed:', error);
+    res.status(500).json({ error: 'Failed to fetch Foodista feed' });
+  }
+};
+
+/**
+ * Import a resource from a URL (Scrape)
+ */
+export const importResource = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { url } = req.body;
+    const clerkUserId = req.auth?.userId;
+
+    if (!clerkUserId) {
+      res.status(401).json({ error: 'Unauthorized: User ID not found' });
+      return;
+    }
+
+    if (!url) {
+      res.status(400).json({ error: 'URL is required' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId: clerkUserId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found in database' });
+      return;
+    }
+
+    const scrapedData = await webScraperService.scrapeRecipe(url);
+
+    if (!scrapedData) {
+      res.status(422).json({ error: 'Could not extract recipe data from this URL' });
+      return;
+    }
+
+    // Create resource from scraped data using the service
+    const resource = await resourcesService.createResource(user.id, {
+      title: scrapedData.title,
+      description: scrapedData.description || 'Imported recipe',
+      url: scrapedData.url,
+      type: 'Article', // Treat blogs as articles
+      isPublic: false, // Private by default
+      tags: ['Imported', 'Recipe', ...(scrapedData.ingredients ? scrapedData.ingredients.slice(0, 3) : [])]
+    });
+
+    res.status(201).json({
+      message: 'Resource imported successfully',
+      data: {
+        resource,
+        scrapedData // Return detailed data if needed
+      }
+    });
+
+  } catch (error) {
+    console.error('Error importing resource:', error);
+    res.status(500).json({ error: 'Failed to import resource' });
+  }
+};
+
 export const resourcesController = {
   getAllResources,
   getAllResourceTags,
   getResourceById,
   getPersonalizedRecommendations,
-  searchExternalArticles,
-  searchExternalVideos,
+  searchArticles: searchExternalArticles, // Aliased to match router (searchArticles)
+  searchVideos: searchExternalVideos,     // Aliased to match router (searchVideos)
   createResource,
   updateResource,
   deleteResource,
+  getFoodistaFeed,
+  importResource
 };
