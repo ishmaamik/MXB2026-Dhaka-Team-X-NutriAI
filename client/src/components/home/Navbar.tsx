@@ -41,10 +41,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Leaf className="w-5 h-5 text-primary-foreground" />
+            <div className="w-9 h-9 bg-gradient-to-br from-[#2D5A27] to-[#8FBC8F] rounded-xl flex items-center justify-center shadow-sm">
+              <Leaf className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-lg text-foreground hidden sm:inline">
+            <span className="font-bold text-xl text-foreground hidden sm:inline">
               NutriTrack
             </span>
           </Link>
@@ -54,7 +54,7 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-foreground/80 hover:text-primary transition-smooth text-sm font-medium"
+                className="text-foreground/70 hover:text-primary transition-smooth text-sm font-medium"
               >
                 {link.label}
               </a>
@@ -66,36 +66,37 @@ export default function Navbar() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={toggleUserMenu}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-secondary/20 transition-smooth"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-secondary transition-smooth border border-transparent hover:border-border"
                 >
-                  <User className="w-4 h-4" />
-                  <span className="text-sm font-medium">Account</span>
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">Account</span>
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-border rounded-lg shadow-lg py-1 z-50">
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-lg py-2 z-50">
                     <Link
                       to="/dashboard"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary/20 transition-smooth"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary transition-smooth text-foreground"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      <Settings className="w-4 h-4" />
+                      <Settings className="w-4 h-4 text-primary" />
                       Dashboard
                     </Link>
                     <Link
                       to="/profile"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary/20 transition-smooth"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary transition-smooth text-foreground"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      <User className="w-4 h-4" />
+                      <User className="w-4 h-4 text-primary" />
                       Profile
                     </Link>
+                    <div className="border-t border-border my-1"></div>
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
                         signOut();
                       }}
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary/20 transition-smooth w-full text-left"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-red-50 transition-smooth w-full text-left text-foreground hover:text-red-600"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out
@@ -107,13 +108,13 @@ export default function Navbar() {
               <>
                 <Link
                   to="/sign-in"
-                  className="text-foreground/80 hover:text-primary transition-smooth text-sm font-medium"
+                  className="text-foreground/80 hover:text-primary transition-smooth text-sm font-medium px-4 py-2"
                 >
                   Log In
                 </Link>
                 <Link
                   to="/sign-up"
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth text-sm font-medium"
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#A67B5B] to-[#8B5A3C] text-white rounded-xl hover:opacity-90 transition-smooth text-sm font-medium shadow-sm"
                 >
                   Get Started
                 </Link>
@@ -123,7 +124,7 @@ export default function Navbar() {
 
           <button
             onClick={toggleMenu}
-            className="md:hidden text-foreground hover:text-primary transition-smooth"
+            className="md:hidden text-foreground hover:text-primary transition-smooth p-2"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -131,34 +132,34 @@ export default function Navbar() {
 
         {isOpen && (
           <div className="md:hidden pb-4 border-t border-border">
-            <div className="flex flex-col gap-3 pt-4">
+            <div className="flex flex-col gap-2 pt-4">
               {navLinks.map(link => (
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-foreground/80 hover:text-primary transition-smooth text-sm font-medium px-4 py-2"
+                  className="text-foreground/80 hover:text-primary transition-smooth text-sm font-medium px-4 py-3 rounded-lg hover:bg-secondary"
                   onClick={() => setIsOpen(false)}
                 >
                   {link.label}
                 </a>
               ))}
-              <div className="flex gap-2 px-4">
+              <div className="flex flex-col gap-2 px-4 mt-2 pt-4 border-t border-border">
                 {isSignedIn ? (
-                  <div className="flex flex-col gap-2 w-full">
+                  <>
                     <Link
                       to="/dashboard"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary/20 transition-smooth rounded-lg"
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-secondary transition-smooth rounded-lg"
                       onClick={() => setIsOpen(false)}
                     >
-                      <Settings className="w-4 h-4" />
+                      <Settings className="w-4 h-4 text-primary" />
                       Dashboard
                     </Link>
                     <Link
                       to="/profile"
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary/20 transition-smooth rounded-lg"
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-secondary transition-smooth rounded-lg"
                       onClick={() => setIsOpen(false)}
                     >
-                      <User className="w-4 h-4" />
+                      <User className="w-4 h-4 text-primary" />
                       Profile
                     </Link>
                     <button
@@ -166,23 +167,23 @@ export default function Navbar() {
                         setIsOpen(false);
                         signOut();
                       }}
-                      className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary/20 transition-smooth rounded-lg w-full text-left"
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-red-50 hover:text-red-600 transition-smooth rounded-lg w-full text-left"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out
                     </button>
-                  </div>
+                  </>
                 ) : (
                   <>
                     <Link
                       to="/sign-in"
-                      className="flex-1 text-center text-foreground/80 hover:text-primary transition-smooth text-sm font-medium py-2"
+                      className="text-center text-foreground/80 hover:text-primary transition-smooth text-sm font-medium py-3 rounded-lg hover:bg-secondary"
                     >
                       Log In
                     </Link>
                     <Link
                       to="/sign-up"
-                      className="flex-1 text-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth text-sm font-medium"
+                      className="text-center px-4 py-3 bg-gradient-to-r from-[#A67B5B] to-[#8B5A3C] text-white rounded-xl hover:opacity-90 transition-smooth text-sm font-medium"
                     >
                       Get Started
                     </Link>

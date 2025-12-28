@@ -100,8 +100,8 @@ export default function OnboardingPage() {
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-            <Leaf className="w-8 h-8 text-primary-foreground" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#2D5A27] to-[#8FBC8F] rounded-2xl mb-4 shadow-lg">
+            <Leaf className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to NutriTrack! 🌱</h1>
           <p className="text-foreground/70">Let's set up your profile to get started</p>
@@ -113,23 +113,23 @@ export default function OnboardingPage() {
             <span className="text-sm font-medium text-foreground">Step {step} of 4</span>
             <span className="text-sm text-foreground/70">{Math.round((step / 4) * 100)}% complete</span>
           </div>
-          <div className="w-full bg-secondary/20 rounded-full h-2">
+          <div className="w-full bg-[#E8DFD5] rounded-full h-2">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-[#A67B5B] to-[#8B5A3C] h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / 4) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Form */}
-        <div className="bg-card rounded-2xl border border-border p-8 shadow-xl">
+        <div className="bg-card rounded-2xl border border-[#E8DFD5] p-8 shadow-xl">
           <form onSubmit={handleSubmit}>
             {/* Step 1: Full Name */}
             {step === 1 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <User className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center">
+                    <User className="w-5 h-5 text-[#A67B5B]" />
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">What's your name?</h2>
@@ -159,8 +159,8 @@ export default function OnboardingPage() {
             {step === 2 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Utensils className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 bg-[#2D5A27]/10 rounded-xl flex items-center justify-center">
+                    <Utensils className="w-5 h-5 text-[#2D5A27]" />
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">Dietary Preference</h2>
@@ -193,8 +193,8 @@ export default function OnboardingPage() {
             {step === 3 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-[#A67B5B]" />
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">Where are you located?</h2>
@@ -223,8 +223,8 @@ export default function OnboardingPage() {
             {step === 4 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 bg-[#2D5A27]/10 rounded-xl flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-[#2D5A27]" />
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-foreground">Monthly Food Budget</h2>

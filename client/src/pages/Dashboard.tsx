@@ -259,8 +259,8 @@ export default function Dashboard() {
         {/* Total Items */}
         <div className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-smooth">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center">
+              <Package className="w-6 h-6 text-[#A67B5B]" />
             </div>
             <div>
               <p className="text-sm text-foreground/70">Items Tracked</p>
@@ -275,11 +275,11 @@ export default function Dashboard() {
         {/* Expiring Soon */}
         <div className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-smooth">
           <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-              dashboardStats.expiringItems > 0 ? 'bg-orange-500/10' : 'bg-green-500/10'
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+              dashboardStats.expiringItems > 0 ? 'bg-[#C2722B]/10' : 'bg-[#2D5A27]/10'
             }`}>
               <Clock className={`w-6 h-6 ${
-                dashboardStats.expiringItems > 0 ? 'text-orange-600' : 'text-green-600'
+                dashboardStats.expiringItems > 0 ? 'text-[#C2722B]' : 'text-[#2D5A27]'
               }`} />
             </div>
             <div>
@@ -295,8 +295,8 @@ export default function Dashboard() {
         {/* Today's Activity */}
         <div className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-smooth">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-              <ChefHat className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-[#2D5A27]/10 rounded-xl flex items-center justify-center">
+              <ChefHat className="w-6 h-6 text-[#2D5A27]" />
             </div>
             <div>
               <p className="text-sm text-foreground/70">Today's Activity</p>
@@ -311,8 +311,8 @@ export default function Dashboard() {
         {/* Waste Prevented */}
         <div className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-smooth">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-[#8FBC8F]/20 rounded-xl flex items-center justify-center">
+              <Leaf className="w-6 h-6 text-[#2D5A27]" />
             </div>
             <div>
               <p className="text-sm text-foreground/70">Waste Prevented</p>
@@ -348,20 +348,20 @@ export default function Dashboard() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-background rounded-lg">
-              <p className="text-2xl font-bold text-primary">{dashboardStats.inventoryCount}</p>
+            <div className="text-center p-4 bg-[#FFF8DC]/30 rounded-xl">
+              <p className="text-2xl font-bold text-[#A67B5B]">{dashboardStats.inventoryCount}</p>
               <p className="text-sm text-foreground/70">Inventories</p>
             </div>
-            <div className="text-center p-4 bg-background rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">{dashboardStats.totalConsumptionLogs}</p>
+            <div className="text-center p-4 bg-[#FFF8DC]/30 rounded-xl">
+              <p className="text-2xl font-bold text-[#5B7AA6]">{dashboardStats.totalConsumptionLogs}</p>
               <p className="text-sm text-foreground/70">Total Logs</p>
             </div>
-            <div className="text-center p-4 bg-background rounded-lg">
-              <p className="text-2xl font-bold text-green-600">{dashboardStats.topCategory}</p>
+            <div className="text-center p-4 bg-[#FFF8DC]/30 rounded-xl">
+              <p className="text-2xl font-bold text-[#2D5A27]">{dashboardStats.topCategory}</p>
               <p className="text-sm text-foreground/70">Top Category</p>
             </div>
-            <div className="text-center p-4 bg-background rounded-lg">
-              <p className="text-2xl font-bold text-orange-600">
+            <div className="text-center p-4 bg-[#FFF8DC]/30 rounded-xl">
+              <p className="text-2xl font-bold text-[#C2722B]">
                 {consumptionPatterns?.wasteReduction?.wasteReductionPercentage || 0}%
               </p>
               <p className="text-sm text-foreground/70">Waste Reduced</p>
@@ -394,15 +394,15 @@ export default function Dashboard() {
           </h2>
           <div className="space-y-3">
             {dashboardStats.expiringItems > 0 && (
-              <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <AlertTriangle className="w-5 h-5 text-orange-600 shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-[#FFF8F0] border border-[#E8C5A0] rounded-xl">
+                <AlertTriangle className="w-5 h-5 text-[#C2722B] shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-orange-800">
+                  <p className="text-sm font-medium text-[#8B5A3C]">
                     {dashboardStats.expiringItems} items expiring soon!
                   </p>
                   <Link
                     to="/inventory"
-                    className="text-xs text-orange-600 hover:text-orange-800 underline"
+                    className="text-xs text-[#A67B5B] hover:text-[#8B5A3C] underline"
                   >
                     Check inventory →
                   </Link>
@@ -411,15 +411,15 @@ export default function Dashboard() {
             )}
             
             {dashboardStats.todayConsumption === 0 && (
-              <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <ChefHat className="w-5 h-5 text-blue-600 shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-[#F0F5FA] border border-[#D0DDE8] rounded-xl">
+                <ChefHat className="w-5 h-5 text-[#5B7AA6] shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-800">
+                  <p className="text-sm font-medium text-[#3D5A80]">
                     No activity logged today
                   </p>
                   <Link
                     to="/daily-log"
-                    className="text-xs text-blue-600 hover:text-blue-800 underline"
+                    className="text-xs text-[#5B7AA6] hover:text-[#3D5A80] underline"
                   >
                     Log consumption →
                   </Link>
@@ -428,15 +428,15 @@ export default function Dashboard() {
             )}
             
             {dashboardStats.totalItems === 0 && (
-              <div className="flex items-center gap-3 p-3 bg-primary/10 border border-primary/20 rounded-lg">
-                <Package className="w-5 h-5 text-primary shrink-0" />
+              <div className="flex items-center gap-3 p-3 bg-[#2D5A27]/5 border border-[#2D5A27]/20 rounded-xl">
+                <Package className="w-5 h-5 text-[#2D5A27] shrink-0" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-foreground">
                     Start tracking your food
                   </p>
                   <Link
                     to="/inventory"
-                    className="text-xs text-primary hover:text-primary/80 underline"
+                    className="text-xs text-[#2D5A27] hover:text-[#1A3A17] underline"
                   >
                     Add your first item →
                   </Link>

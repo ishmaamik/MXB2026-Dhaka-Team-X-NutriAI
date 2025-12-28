@@ -51,8 +51,8 @@ export default function ProfilePage() {
       <div className="bg-card rounded-2xl border border-border p-8">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-              <User className="w-10 h-10 text-primary" />
+            <div className="w-20 h-20 bg-gradient-to-br from-[#A67B5B]/20 to-[#8B5A3C]/10 rounded-full flex items-center justify-center">
+              <User className="w-10 h-10 text-[#A67B5B]" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-1">
@@ -64,7 +64,7 @@ export default function ProfilePage() {
 
           <Link
             to="/profile/edit"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#A67B5B] to-[#8B5A3C] text-white rounded-xl hover:opacity-90 transition-smooth font-medium shadow-sm"
           >
             <Edit className="w-4 h-4" />
             Edit Profile
@@ -80,7 +80,7 @@ export default function ProfilePage() {
           {/* Email */}
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Mail className="w-5 h-5 text-primary" />
+                <Mail className="w-5 h-5 text-[#A67B5B]" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground/70 mb-1">Email Address</p>
@@ -139,7 +139,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/50">
             {/* Height */}
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Ruler className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
@@ -150,7 +150,7 @@ export default function ProfilePage() {
 
             {/* Weight */}
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Scale className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
@@ -161,7 +161,7 @@ export default function ProfilePage() {
 
             {/* Weight Goal */}
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Target className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
@@ -172,7 +172,7 @@ export default function ProfilePage() {
 
             {/* Allergies */}
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <AlertCircle className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
@@ -182,7 +182,7 @@ export default function ProfilePage() {
             </div>
             {/* Health Condition */}
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Heart className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">

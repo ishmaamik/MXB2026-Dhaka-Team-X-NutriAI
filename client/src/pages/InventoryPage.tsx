@@ -79,8 +79,8 @@ export default function InventoryPage() {
     <div className="min-h-screen bg-background">
       <div className="bg-card border-b border-border px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0 shadow-sm">
-            <Package className="w-5 h-5 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#A67B5B] to-[#8B5A3C] flex items-center justify-center flex-shrink-0 shadow-sm">
+            <Package className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="font-bold text-lg text-foreground">My Inventories</h1>
@@ -88,7 +88,7 @@ export default function InventoryPage() {
           </div>
         </div>
         <button
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-smooth font-medium flex items-center gap-2"
+          className="px-4 py-2 bg-gradient-to-r from-[#A67B5B] to-[#8B5A3C] text-white rounded-xl hover:opacity-90 transition-smooth font-medium flex items-center gap-2 shadow-sm"
           onClick={() => setShowAddModal(true)}
         >
           <Plus className="w-4 h-4" /> Create Inventory
@@ -100,8 +100,8 @@ export default function InventoryPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-card rounded-xl border border-border p-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Package className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 bg-[#A67B5B]/10 rounded-xl flex items-center justify-center">
+                <Package className="w-5 h-5 text-[#A67B5B]" />
               </div>
               <div>
                 <p className="text-sm text-foreground/70">Total Inventories</p>
@@ -112,8 +112,8 @@ export default function InventoryPage() {
 
           <div className="bg-card rounded-xl border border-border p-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                <Apple className="w-5 h-5 text-accent" />
+              <div className="w-10 h-10 bg-[#8FBC8F]/20 rounded-xl flex items-center justify-center">
+                <Apple className="w-5 h-5 text-[#2D5A27]" />
               </div>
               <div>
                 <p className="text-sm text-foreground/70">Active</p>
@@ -124,8 +124,8 @@ export default function InventoryPage() {
 
           <div className="bg-card rounded-xl border border-border p-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-secondary/20 rounded-lg flex items-center justify-center">
-                <Utensils className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 bg-[#FFF8DC] rounded-xl flex items-center justify-center">
+                <Utensils className="w-5 h-5 text-[#A67B5B]" />
               </div>
               <div>
                 <p className="text-sm text-foreground/70">Items</p>
