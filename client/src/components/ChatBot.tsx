@@ -34,6 +34,14 @@ export const ChatBot: React.FC = () => {
         scrollToBottom();
     }, [messages]);
 
+    useEffect(() => {
+        const handleToggle = (e: any) => {
+            setIsOpen(prev => (e.detail !== undefined ? e.detail : !prev));
+        };
+        window.addEventListener('toggleNutriChat', handleToggle);
+        return () => window.removeEventListener('toggleNutriChat', handleToggle);
+    }, []);
+
     // --- Voice Logic ---
     const startRecording = async () => {
         try {
@@ -228,8 +236,8 @@ export const ChatBot: React.FC = () => {
                         <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Active session</p>
                     </div>
                 </div>
-                <button 
-                    onClick={() => setIsOpen(false)} 
+                <button
+                    onClick={() => setIsOpen(false)}
                     className="hover:bg-red-50 p-2 rounded-xl transition-all text-slate-400 hover:text-red-500 border border-transparent hover:border-red-100"
                 >
                     <X className="w-5 h-5" />

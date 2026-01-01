@@ -12,11 +12,8 @@ import {
   TrendingUp,
   Plus,
   Sparkles,
-  Zap,
-  Check,
-  Copy,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import AIResponseDisplay from '../components/AIResponseDisplay';
@@ -99,20 +96,11 @@ interface DashboardInsight {
 
 interface AIResponse {
   success: boolean;
-  response?: string | null;
+  response?: string;
   data?: Record<string, unknown>;
   insights?: string;
   toolsUsed?: number;
   error?: string;
-}
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  status?: 'loading' | 'done' | 'error';
-  toolsUsed?: number;
 }
 
 const IntelligentDashboard: React.FC = () => {
@@ -120,16 +108,12 @@ const IntelligentDashboard: React.FC = () => {
   const [insights, setInsights] = useState<DashboardInsight>({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
-  const [chatQuery, setChatQuery] = useState('');
-  const [chatLoading, setChatLoading] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [quickActionResponse, setQuickActionResponse] =
     useState<AIResponse | null>(null);
   const [nutritionInsights, setNutritionInsights] = useState<AIResponse | null>(
     null,
   );
   const [loadingInsight, setLoadingInsight] = useState<string | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -156,82 +140,6 @@ const IntelligentDashboard: React.FC = () => {
   useEffect(() => {
     fetchDashboardInsights();
   }, [fetchDashboardInsights]);
-
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  const handleChatSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatQuery.trim() || chatLoading) return;
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: chatQuery.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setChatQuery('');
-    setChatLoading(true);
-
-    const assistantId = (Date.now() + 1).toString();
-    const loadingMessage: ChatMessage = {
-      id: assistantId,
-      role: 'assistant',
-      content: '',
-      timestamp: new Date(),
-      status: 'loading',
-    };
-    setMessages(prev => [...prev, loadingMessage]);
-
-    try {
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/intelligence/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ query: userMessage.content }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(prev =>
-          prev.map(msg =>
-            msg.id === assistantId
-              ? {
-                ...msg,
-                content: data.data.response || data.message || 'I have analyzed your request.',
-                status: 'done',
-                toolsUsed: data.data.toolsUsed,
-              }
-              : msg
-          )
-        );
-      } else {
-        throw new Error('Chat failed');
-      }
-    } catch (error) {
-      setMessages(prev =>
-        prev.map(msg =>
-          msg.id === assistantId
-            ? {
-              ...msg,
-              content: 'Sorry, I encountered an error. Please try again.',
-              status: 'error',
-            }
-            : msg
-        )
-      );
-    } finally {
-      setChatLoading(false);
-    }
-  };
 
   const fetchSpecificInsight = async (
     endpoint: string,
@@ -363,7 +271,6 @@ const IntelligentDashboard: React.FC = () => {
                 { id: 'waste', label: 'Waste Risk', icon: AlertTriangle },
                 { id: 'nutrition', label: 'Nutrition', icon: Target },
                 { id: 'impact', label: 'Impact', icon: Leaf },
-                { id: 'chat', label: 'AI Assistant', icon: MessageSquare },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -390,6 +297,14 @@ const IntelligentDashboard: React.FC = () => {
                   </span>
                 </button>
               ))}
+              <div className="w-px h-6 bg-gray-200 mx-2 self-center" />
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('toggleNutriChat', { detail: true }))}
+                className="flex items-center gap-2 py-2.5 px-4 rounded-xl font-black text-xs bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-lg shadow-purple-200 active:scale-95"
+              >
+                <MessageSquare className="w-4 h-4 animate-pulse" />
+                AI Assistant
+              </button>
             </nav>
           </div>
         </div>
@@ -1048,145 +963,6 @@ const IntelligentDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* AI Assistant Tab */}
-        {activeTab === 'chat' && (
-          <div className="flex flex-col h-[calc(100vh-250px)] bg-white rounded-3xl shadow-sm border border-gray-200/60 overflow-hidden relative">
-            {/* Chat Header */}
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white/50 backdrop-blur-sm relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 leading-none">Nutrition Assistant</h3>
-                  <span className="text-[10px] text-green-500 font-black uppercase tracking-widest mt-1 inline-block">Online</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setMessages([])}
-                className="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors"
-                title="Clear conversation"
-              >
-                Clear History
-              </button>
-            </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 no-scrollbar scrolling-touch">
-              {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-6">
-                  <div className="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center animate-bounce">
-                    <Brain className="w-8 h-8 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-gray-900 mb-2">How can I help you today?</h3>
-                    <p className="text-sm font-medium text-gray-500 leading-relaxed">
-                      Ask me about your food items, get recipe ideas, or analyze your nutrition patterns.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 w-full pt-4">
-                    {[
-                      "What's in my inventory?",
-                      "Suggest a recipe for tonight",
-                      "How can I reduce food waste?",
-                      "Analyze my nutrition trends"
-                    ].map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => {
-                          setChatQuery(suggestion);
-                        }}
-                        className="p-3 bg-gray-50 hover:bg-purple-50 border border-gray-100 rounded-xl text-left text-sm font-bold text-gray-700 transition-all hover:border-purple-200 group"
-                      >
-                        <span className="group-hover:text-purple-600 transition-colors">✨ {suggestion}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {messages.map((msg) => (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} group`}
-                    >
-                      <div className={`flex flex-col gap-1.5 max-w-[85%] sm:max-w-[75%]`}>
-                        <div className={`flex items-center gap-2 mb-1 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black uppercase text-white ${msg.role === 'user' ? 'bg-indigo-500' : 'bg-purple-600'}`}>
-                            {msg.role === 'user' ? 'ME' : 'AI'}
-                          </div>
-                          <span className="text-[10px] font-black text-gray-400 tracking-tighter uppercase">
-                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-
-                        <div className={`relative px-4 py-3 rounded-2xl shadow-sm ${msg.role === 'user'
-                          ? 'bg-indigo-600 text-white rounded-tr-none'
-                          : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none'
-                          }`}>
-                          {msg.status === 'loading' ? (
-                            <div className="flex gap-1 py-1">
-                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                              <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></span>
-                            </div>
-                          ) : (
-                            <div className={msg.role === 'user' ? 'prose-invert' : 'prose-purple'}>
-                              <MarkdownRenderer content={msg.content} className={msg.role === 'user' ? 'text-white' : ''} />
-                            </div>
-                          )}
-
-                          {msg.toolsUsed && (
-                            <div className="mt-2 text-[10px] font-black uppercase tracking-widest text-purple-400/80 border-t border-purple-50 pt-2 flex items-center gap-1.5">
-                              <Zap className="w-3 h-3" /> Used {msg.toolsUsed} AI tools
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                  <div ref={chatEndRef} />
-                </>
-              )}
-            </div>
-
-            {/* Input Area */}
-            <div className="p-4 bg-white border-t border-gray-100">
-              <form
-                onSubmit={handleChatSubmit}
-                className="relative flex items-center gap-2 max-w-4xl mx-auto"
-              >
-                <div className="relative flex-1 group">
-                  <input
-                    type="text"
-                    value={chatQuery}
-                    onChange={(e) => setChatQuery(e.target.value)}
-                    placeholder="Ask me anything about your nutrition..."
-                    className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 pr-12 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder:text-gray-400"
-                    disabled={chatLoading}
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border border-gray-200 bg-white px-1.5 font-mono text-[10px] font-medium text-gray-400 opacity-100">
-                      ↵
-                    </kbd>
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={!chatQuery.trim() || chatLoading}
-                  className="bg-black text-white p-4 rounded-2xl hover:bg-gray-900 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-black/10 active:scale-95 shrink-0"
-                >
-                  <Sparkles className={`w-5 h-5 ${chatLoading ? 'animate-pulse' : ''}`} />
-                </button>
-              </form>
-              <p className="text-[10px] text-center text-gray-400 mt-2 font-medium">
-                AI may provide inaccurate info. Verification recommended.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
